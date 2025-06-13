@@ -5,4 +5,6 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes: []
-  m_configObjects: {}
+  m_configObjects:
+    Hololight.Stream.XRSettings: {fileID: 11400000, guid: 458cd7995759e8e4b8d16f24006f1096, type: 2}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 17bdc8e5bb7c6b14e974832054abb924, type: 2}
