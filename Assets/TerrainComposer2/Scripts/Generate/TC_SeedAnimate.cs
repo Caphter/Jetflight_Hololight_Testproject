@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace TerrainComposer2
 {
-    [ExecuteInEditMode]
+    //[ExecuteInEditMode]
     public class TC_SeedAnimate : MonoBehaviour
     {
         public float animateSpeed;
@@ -14,12 +14,14 @@ namespace TerrainComposer2
             MyUpdate();
         }
 
+        
         void MyUpdate()
         {
+            /*
             if (TC_Settings.instance == null) return;
             TC_Settings.instance.seed += (Time.realtimeSinceStartup - time) * animateSpeed;
             time = Time.realtimeSinceStartup;
-            TC.AutoGenerate();
+            TC.AutoGenerate();*/
         }
 
 #if UNITY_EDITOR
