@@ -8,11 +8,6 @@ public class ThrottleSpeedCalc : MonoBehaviour
     [SerializeField] private GameObject throttleObject;
     [SerializeField] private float maxSpeedValue;
 
-    [SerializeField] private float startLifetimeMin = 0.5f;
-    [SerializeField] private float startLifetimeMax = 1f;
-    [SerializeField] private float startSpeedMin = 0.25f;
-    [SerializeField] private float startSpeedMax = 2f;
-
     public float GetCurrentThrottleToSpeedValue()
     {
         // Berechne den aktuellen Winkel des throttleObjects
