@@ -6,9 +6,9 @@ TerrainLayer:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_DiffuseTexture: {fileID: 2800000, guid: c6e0767b1f8c34890ac245217f4b9731, type: 3}
-  m_NormalMapTexture: {fileID: 0}
+  m_Name: Jetflight_TerrainLayer_3
+  m_DiffuseTexture: {fileID: 2800000, guid: 37c8611f846a10a449054d1fc42433d7, type: 3}
+  m_NormalMapTexture: {fileID: 2800000, guid: a5bf56083d96b214d83b4001ddd35450, type: 3}
   m_MaskMapTexture: {fileID: 0}
   m_TileSize: {x: 14.948905, y: 14.948905}
   m_TileOffset: {x: 0, y: 0}
