@@ -9,8 +9,8 @@ showPackageIndexes = false
 showStatusBar = false
 scopes = {
 	"picker_window_position_offset.D845A788" = "599;533;320;550"
-	"picker_search_text.D845A788" = "trigger"
-	"last_search.D845A788" = "trigger"
+	"picker_search_text.D845A788" = "second "
+	"last_search.D845A788" = "second "
 	"OpenInspectorPreview.D845A788" = "0"
 	"currentGroup.D845A788" = "all"
 }
@@ -64,6 +64,7 @@ providers = {
 objectSelectors = {
 }
 recentSearches = [
+	"r"
 	"t"
 	"th"
 ]

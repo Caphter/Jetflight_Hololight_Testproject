@@ -13,10 +13,6 @@ public class ThrottleMovement : MonoBehaviour
     [SerializeField] private GameObject leftControllerMesh;
 
     private bool throttleGrabbed = false;
-    private Vector3 initialJoystickPosition;
-
-    private bool leftHandTriggerPressed = false;
-    private bool leftHandTriggerGotPressed = false;
     
 
     void Update()

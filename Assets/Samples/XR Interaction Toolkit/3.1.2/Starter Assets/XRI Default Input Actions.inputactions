@@ -1554,6 +1554,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "RightSecondaryPressed",
+                    "type": "Button",
+                    "id": "53c46b96-26ae-45e4-a3f7-257d15472653",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -1972,6 +1981,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "RightTriggerPressed",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9a46d7e3-c631-4c56-a696-1f73d6f804db",
+                    "path": "<OculusTouchController>/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RightSecondaryPressed",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

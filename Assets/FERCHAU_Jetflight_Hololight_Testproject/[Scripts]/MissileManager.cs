@@ -4,10 +4,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// This Unity script manages two missiles (left and right) fired via the right VR controller trigger, moving them at a set speed, exploding after a fixed flight time, 
-/// and respawning them with fade-in/out effects. It uses coroutines to handle missile flight, explosion instantiation, and material fading, tracking availability for sequential firing
+/// This Unity script manages two missiles (left and right) fired via the right VR controller trigger, moving them at a set speed, exploding on collision with terrain (set by external script) or after a fixed flight time,
+/// and respawning them with fade-in/out effects. It uses coroutines to handle missile flight, explosion instantiation, and material fading, tracking availability for sequential firing.
 /// </summary>
-
 public class MissileManager : MonoBehaviour
 {
     [Header("Missile Settings:")]
@@ -23,6 +22,7 @@ public class MissileManager : MonoBehaviour
     [SerializeField] private Material missileMaterialRight;
     [SerializeField] private ParticleSystem missileParticleSystemRight;
     [SerializeField] private bool missileRightAvailable = true;
+    public bool rightCollidedWithTerrain = false;
 
     [Header("Missile Left:")]
     [SerializeField] private GameObject missileLeft;
@@ -31,9 +31,10 @@ public class MissileManager : MonoBehaviour
     [SerializeField] private Material missileMaterialLeft;
     [SerializeField] private ParticleSystem missileParticleSystemLeft;
     [SerializeField] private bool missileLeftAvailable = true;
+    public bool leftCollidedWithTerrain = false;
 
     private bool rightTriggerPressed = false;
-    private bool rightTriggerGotPressed = false;
+    private bool preventContiniousFiring = false;
     public InputActionReference triggerPressedButton;
 
     private void Start()
@@ -54,16 +55,22 @@ public class MissileManager : MonoBehaviour
     private void Update()
     {
         // Wenn der Trigger gedrückt ist und noch nicht als gedrückt registriert wurde
-        if (rightTriggerPressed && !rightTriggerGotPressed)
+        if (rightTriggerPressed && !preventContiniousFiring)
         {
-            rightTriggerGotPressed = true;
+            preventContiniousFiring = true;
             FireMissile();
         }
+    }
 
-        // Wenn der Trigger losgelassen wurde und zuvor als gedrückt registriert war
-        if (!rightTriggerPressed && rightTriggerGotPressed)
+    public void CollidedWithTerrain(string side)
+    {
+        if (side == "right")
         {
-            rightTriggerGotPressed = false;
+            rightCollidedWithTerrain = true;
+        }
+        else if (side == "left")
+        {
+            leftCollidedWithTerrain = true;
         }
     }
 
@@ -75,6 +82,7 @@ public class MissileManager : MonoBehaviour
     private void TriggerWasReleased(InputAction.CallbackContext context)
     {
         rightTriggerPressed = false;
+        preventContiniousFiring = false;
     }
 
     public void FireMissile()
@@ -82,11 +90,13 @@ public class MissileManager : MonoBehaviour
         if (missileRightAvailable)
         {
             missileRightAvailable = false;
+            rightCollidedWithTerrain = false; // Reset collision flag
             StartCoroutine(MissileFlight(missileRight, missileMaterialRight, "right", missileParticleSystemRight));
         }
         else if (missileLeftAvailable)
         {
             missileLeftAvailable = false;
+            leftCollidedWithTerrain = false; // Reset collision flag
             StartCoroutine(MissileFlight(missileLeft, missileMaterialLeft, "left", missileParticleSystemLeft));
         }
         else
@@ -101,32 +111,35 @@ public class MissileManager : MonoBehaviour
         missile.transform.parent = null;
         missileParticleSystem.Play();
 
-        Rigidbody rb = missile.GetComponent<Rigidbody>();
-        if (rb != null)
+        StartCoroutine(MoveMissile(missile, side));
+
+
+        // Rakete fliegt für die angegebene Zeit oder bis zur Kollision
+        float elapsedTime = 0f;
+        bool collided = false;
+        while (elapsedTime < flightTimeTillExplosion && !(side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain))
         {
-            rb.velocity = missile.transform.forward * missileSpeed;
-        }
-        else
-        {
-            StartCoroutine(MoveMissile(missile));
+            elapsedTime += Time.deltaTime;
+            yield return null;
         }
 
-        // Rakete fliegt für die angegebene Zeit
-        yield return new WaitForSeconds(flightTimeTillExplosion);
+        // Check if loop exited due to collision
+        collided = (side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain);
 
-        
+        // Stop particle system
+        missileParticleSystem.Stop();
+
         // Explosion instanziieren
-        if (side == "right")
+        Vector3 explosionPosition = side == "right" ? explosionReferencePointRight.position : explosionReferencePointLeft.position;
+        if (collided)
         {
-            GameObject obj = Instantiate(explosionPrefabs[Random.Range(0, explosionPrefabs.Count)], explosionReferencePointRight.position, Quaternion.identity);
-            Destroy(obj, 1.5f);
+            // Use missile's current position for explosion on collision
+            explosionPosition = missile.transform.position;
         }
-        else if (side == "left")
-        {
-            GameObject obj = Instantiate(explosionPrefabs[Random.Range(0, explosionPrefabs.Count)], explosionReferencePointLeft.position, Quaternion.identity);
-            Destroy(obj, 1.5f);
-        }
-        
+
+        GameObject obj = Instantiate(explosionPrefabs[Random.Range(0, explosionPrefabs.Count)], explosionPosition, Quaternion.identity);
+        Destroy(obj, 1.5f);
+
         // Rakete über 0.25s ausfaden
         yield return StartCoroutine(FadeOutMaterial(missileMaterial, 0.25f));
 
@@ -137,6 +150,7 @@ public class MissileManager : MonoBehaviour
             missile.transform.rotation = missileRespawnPointRight.rotation;
             missile.transform.parent = missileParentInJet;
             missileRightAvailable = true;
+            rightCollidedWithTerrain = false; // Reset collision flag
         }
         else if (side == "left")
         {
@@ -144,17 +158,18 @@ public class MissileManager : MonoBehaviour
             missile.transform.rotation = missileRespawnPointLeft.rotation;
             missile.transform.parent = missileParentInJet;
             missileLeftAvailable = true;
+            leftCollidedWithTerrain = false; // Reset collision flag
         }
 
         // Rakete über 0.5s einfaden
         yield return StartCoroutine(FadeInMaterial(missileMaterial, 0.5f));
     }
 
-    private IEnumerator MoveMissile(GameObject missile)
+    private IEnumerator MoveMissile(GameObject missile, string side)
     {
         float flightTime = 0f;
 
-        while (flightTime < flightTimeTillExplosion)
+        while (flightTime < flightTimeTillExplosion && !(side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain))
         {
             missile.transform.Translate(Vector3.forward * missileSpeed * Time.deltaTime);
             flightTime += Time.deltaTime;
