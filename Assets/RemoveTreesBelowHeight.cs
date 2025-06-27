@@ -56,6 +56,5 @@ public class RemoveTreesBelowHeight : MonoBehaviour
 
         // Aktualisiere die Baum-Instanzen im Terrain
         terrainData.treeInstances = newTrees;
-        Debug.Log($"Es wurden {trees.Length - keepCount} Bäume unter der Höhe {heightThreshold} entfernt.");
     }
 }

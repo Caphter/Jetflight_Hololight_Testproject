@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - Terrain
+  - dirt
   layers:
   - Default
   - TransparentFX
@@ -17,7 +18,7 @@ TagManager:
   - Suimono_Water
   - Suimono_Depth
   - Suimono_Screen
-  - 
+  - PostProcessing
   - 
   - 
   - 

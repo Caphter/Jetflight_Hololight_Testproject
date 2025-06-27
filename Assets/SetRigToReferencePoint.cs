@@ -57,8 +57,5 @@ public class SetRigToReferencePoint : MonoBehaviour
         // Setze Position und Rotation des XR Rigs
         xrRig.transform.position = targetPosition;
         xrRig.transform.rotation = referencePoint.rotation;
-
-        Debug.Log($"XR Rig gesetzt auf Position: {xrRig.transform.position}, Rotation: {xrRig.transform.rotation}");
-        Debug.Log($"Kamera-Position nach Verschiebung: {mainCamera.transform.position}");
     }
 }
