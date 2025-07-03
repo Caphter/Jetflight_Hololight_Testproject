@@ -5,10 +5,10 @@ GraphicsSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 15
   m_Deferred:
-    m_Mode: 1
+    m_Mode: 2
     m_Shader: {fileID: 69, guid: 0000000000000000f000000000000000, type: 0}
   m_DeferredReflections:
-    m_Mode: 1
+    m_Mode: 2
     m_Shader: {fileID: 74, guid: 0000000000000000f000000000000000, type: 0}
   m_ScreenSpaceShadows:
     m_Mode: 1
@@ -33,6 +33,8 @@ GraphicsSettings:
   - {fileID: 15106, guid: 0000000000000000f000000000000000, type: 0}
   - {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
   - {fileID: 10770, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 4800000, guid: d54a881b830cae544a72985daaece999, type: 3}
+  - {fileID: 4800000, guid: 6c5f1c7411ec6004fb354db7ff23d494, type: 3}
   m_PreloadedShaders: []
   m_PreloadShadersBatchTimeLimit: -1
   m_SpritesDefaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}

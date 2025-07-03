@@ -9,8 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ace7d9adab0045941820a9c26284e4b1, type: 3}
-  m_Name: XRSettings
+  m_Script: {fileID: 11500000, guid: 975057b4fdcfb8142b3080d19a5cc712, type: 3}
+  m_Name: OpenXR Editor Settings
   m_EditorClassIdentifier: 
-  RenderingMode: 0
-  SignalingImplementationType: 
+  Keys: 
+  Values: []
+  m_vulkanAdditionalGraphicsQueue: 0
