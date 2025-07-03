@@ -4,7 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/FERCHAU_Jetflight_Hololight_Testproject/[Scenes]/Medium Quality
+      Own PC.unity
+    guid: be4337c32fd51244fad902a2dc4037d7
   m_configObjects:
     Hololight.Stream.XRSettings: {fileID: 11400000, guid: 458cd7995759e8e4b8d16f24006f1096, type: 2}
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: a3d94de0d6cea29408b4f6c2baad1fb5, type: 2}
