@@ -2026,6 +2026,17 @@ MonoBehaviour:
   linkScaleToMaskAmount: 1
   untouched: 0
   placed: 0
+--- !u!114 &161699725 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3886622180165394029, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
+  m_PrefabInstance: {fileID: 1348665327}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6289069349537918233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e103a2b2b52a2d48bfeafb26f714e2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &175719312
 GameObject:
   m_ObjectHideFlags: 0
@@ -2053,9 +2064,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 175719312}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.18642971, z: 0, w: -0.98246837}
+  m_LocalRotation: {x: 0, y: -0.9775308, z: 0, w: -0.21079272}
   m_LocalPosition: {x: -1582.6641, y: 254.28018, z: -1942.9585}
-  m_LocalScale: {x: 1.0946181, y: 1.0946181, z: 1.0946181}
+  m_LocalScale: {x: 0.83167636, y: 0.83167636, z: 0.83167636}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1997444839}
@@ -2190,8 +2201,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: 784.0005, y: 2.1134796, z: -705.28125}
-    m_Extent: {x: 3294.7922, y: 25.148043, z: 3294.791}
+    m_Center: {x: 986.2046, y: -68.63161, z: 967.8872}
+    m_Extent: {x: 4997.947, y: 68.63161, z: 4997.945}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -2546,8 +2557,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: 784.00055, y: 2.113479, z: -705.2814}
-    m_Extent: {x: 3294.7922, y: 25.148043, z: 3294.791}
+    m_Center: {x: 986.2047, y: -99.11557, z: 967.8873}
+    m_Extent: {x: 4997.947, y: 38.147648, z: 4997.945}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -2781,8 +2792,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: 626.37726, y: 2.113479, z: -939.0889}
-    m_Extent: {x: 2989.3042, y: 9.353163, z: 2989.3093}
+    m_Center: {x: 921.04755, y: -99.11557, z: 545.14105}
+    m_Extent: {x: 4534.5454, y: 14.188027, z: 4534.5537}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -12391,6 +12402,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b74502b39508ac049ad0416aff3ca04b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isTouchingGround: 0
 --- !u!1 &1262379658
 GameObject:
   m_ObjectHideFlags: 0
@@ -13902,8 +13914,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: 784.0005, y: 2.1134796, z: -705.28125}
-    m_Extent: {x: 3294.7922, y: 25.148043, z: 3294.791}
+    m_Center: {x: 986.2046, y: -68.63161, z: 967.8872}
+    m_Extent: {x: 4997.947, y: 68.63161, z: 4997.945}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -14479,6 +14491,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b74502b39508ac049ad0416aff3ca04b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isTouchingGround: 0
 --- !u!1 &1429587689
 GameObject:
   m_ObjectHideFlags: 0
@@ -16283,8 +16296,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: 784.0005, y: 2.1134796, z: -705.28125}
-    m_Extent: {x: 3294.7922, y: 25.148043, z: 3294.791}
+    m_Center: {x: 986.2046, y: -99.11557, z: 967.8872}
+    m_Extent: {x: 4997.947, y: 38.147644, z: 4997.945}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -17912,6 +17925,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b74502b39508ac049ad0416aff3ca04b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isTouchingGround: 0
 --- !u!1 &1749566014
 GameObject:
   m_ObjectHideFlags: 0
@@ -18970,6 +18984,9 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1812288358}
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1717954561962503725, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1818300909}
     - targetCorrespondingSourceObject: {fileID: 1767192433, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2088140151}
@@ -18984,6 +19001,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1717954561962503726, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
   m_PrefabInstance: {fileID: 1818300898}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1818300901 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1717954561962503725, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+  m_PrefabInstance: {fileID: 1818300898}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1818300907 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1767192434, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
@@ -18994,12 +19016,31 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1178791450436251564, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
   m_PrefabInstance: {fileID: 1818300898}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1818300901}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e0cb9aa70a22847b5925ee5f067c10a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1818300909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1818300901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dbcc6962ff264545989a8251009b896, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  postProcessVolume: {fileID: 1283336457}
+  airplaneMovementControllerScript: {fileID: 161699725}
+  maxVignetteIntensity: 1
+  combinedRotationStrengthThreshold: 1
+  vignetteFadeInSpeed: 2
+  vignetteFadeOutSpeed: 1
+  minInputThresholdForVignette: 0.1
 --- !u!1 &1834731576
 GameObject:
   m_ObjectHideFlags: 0
@@ -22177,13 +22218,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9b4708d22326c14fbe24e5aa3230c0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groundTags:
-  - Ground
-  - Runway
-  groundCheckDebounceTime: 0.1
-  frontWheelGO: {fileID: 1348665328}
-  rearLeftWheelGO: {fileID: 1348665330}
-  rearRightWheelGO: {fileID: 1348665329}
+  currentGroundedWheels: 0
+  isGrounded: 1
+  frontWheelContact: {fileID: 1425325249}
+  rearLeftWheelContact: {fileID: 1730289591}
+  rearRightWheelContact: {fileID: 1252710955}
 --- !u!1 &7021921771290650939 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7021921772094002900, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}

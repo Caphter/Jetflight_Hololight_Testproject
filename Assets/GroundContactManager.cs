@@ -7,9 +7,9 @@ public class GroundContactManager : MonoBehaviour
     public bool isGrounded = true;
 
     [Header("Wheel Touching Scripts")]
-    private WheelTriggerContact frontWheelContact;
-    private WheelTriggerContact rearLeftWheelContact;
-    private WheelTriggerContact rearRightWheelContact;
+    [SerializeField] private WheelTriggerContact frontWheelContact;
+    [SerializeField] private WheelTriggerContact rearLeftWheelContact;
+    [SerializeField] private WheelTriggerContact rearRightWheelContact;
 
 
     void FixedUpdate()
