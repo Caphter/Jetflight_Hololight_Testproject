@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Terrain
   - dirt
+  - ground
   layers:
   - Default
   - TransparentFX
