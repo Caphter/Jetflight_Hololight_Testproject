@@ -31,7 +31,7 @@ public class MotionSicknessVignetteLogic : MonoBehaviour
 
     private void Update()
     {
-        UpdateVignette();
+        //UpdateVignette();
     }
 
     private void OnDestroy()
@@ -41,7 +41,7 @@ public class MotionSicknessVignetteLogic : MonoBehaviour
             vignette.intensity.value = 0f;
         }
     }
-
+    /*
     private void UpdateVignette()
     {
         // Absolute Werte der Inputs nach Deadzone-Anwendung
@@ -81,4 +81,5 @@ public class MotionSicknessVignetteLogic : MonoBehaviour
             vignette.intensity.value = Mathf.Lerp(vignette.intensity.value, 0f, Time.deltaTime * vignetteFadeOutSpeed);
         }
     }
+    */
 }
