@@ -2053,9 +2053,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 175719312}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.9551315, z: 0, w: 0.2961822}
+  m_LocalRotation: {x: 0, y: 0.6295056, z: 0, w: -0.776996}
   m_LocalPosition: {x: -1582.6641, y: 254.28018, z: -1942.9585}
-  m_LocalScale: {x: 0.78637433, y: 0.78637433, z: 0.78637433}
+  m_LocalScale: {x: 1.0909938, y: 1.0909938, z: 1.0909938}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1997444839}
@@ -2190,8 +2190,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3707.2668, y: -20.54385, z: -971.5376}
-    m_Extent: {x: 3707.2668, y: 28.057644, z: 3675.9946}
+    m_Center: {x: 111.81738, y: -41.92694, z: -4103.9277}
+    m_Extent: {x: 4201.613, y: 41.92694, z: 4201.6113}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -2546,8 +2546,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3738.5378, y: -20.543852, z: -971.5376}
-    m_Extent: {x: 3675.9958, y: 28.057644, z: 3675.9946}
+    m_Center: {x: 111.81729, y: -51.7844, z: -4103.9277}
+    m_Extent: {x: 4201.613, y: 32.069485, z: 4201.611}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -2781,8 +2781,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3440.6702, y: -20.543852, z: -870.2993}
-    m_Extent: {x: 3335.1636, y: 10.435314, z: 3335.1694}
+    m_Center: {x: -206.25069, y: -51.7844, z: -3936.1946}
+    m_Extent: {x: 3812.0464, y: 11.927413, z: 3812.0525}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -13154,6 +13154,10 @@ PrefabInstance:
       value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 3886622180165394029, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
+      propertyPath: vignetteLogic
+      value: 
+      objectReference: {fileID: 6289069349537918235}
+    - target: {fileID: 3886622180165394029, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: rightThumbstick
       value: 
       objectReference: {fileID: -8666952849799569744, guid: c348712bda248c246b8c49b3db54643f, type: 3}
@@ -13276,6 +13280,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6289069350886560502, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6289069349537918234}
+    - targetCorrespondingSourceObject: {fileID: 6289069350886560502, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6289069349537918235}
+    - targetCorrespondingSourceObject: {fileID: 6289069350886560502, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6289069349537918238}
     - targetCorrespondingSourceObject: {fileID: 7021921772094002900, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       insertIndex: -1
       addedObject: {fileID: 802588007}
@@ -13903,8 +13913,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3707.2668, y: -20.54385, z: -971.5376}
-    m_Extent: {x: 3707.2668, y: 28.057644, z: 3675.9946}
+    m_Center: {x: 111.81738, y: -41.92694, z: -4103.9277}
+    m_Extent: {x: 4201.613, y: 41.92694, z: 4201.6113}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -16285,8 +16295,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3738.5378, y: -20.54385, z: -971.5376}
-    m_Extent: {x: 3675.9958, y: 28.057644, z: 3675.9946}
+    m_Center: {x: 111.81738, y: -51.7844, z: -4103.9277}
+    m_Extent: {x: 4201.613, y: 32.06948, z: 4201.6113}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -22185,6 +22195,51 @@ MonoBehaviour:
   frontWheelContact: {fileID: 1425325249}
   rearLeftWheelContact: {fileID: 1730289591}
   rearRightWheelContact: {fileID: 1252710955}
+--- !u!114 &6289069349537918235
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6289069349537918233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dbcc6962ff264545989a8251009b896, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  postProcessVolume: {fileID: 1283336457}
+  maxVignetteIntensity: 1
+  combinedRotationStrengthThreshold: 0.1
+  vignetteFadeInSpeed: 3
+  vignetteFadeOutSpeed: 1.5
+  minInputThresholdForVignette: 0.1
+--- !u!54 &6289069349537918238
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6289069349537918233}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &7021921771290650939 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7021921772094002900, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
