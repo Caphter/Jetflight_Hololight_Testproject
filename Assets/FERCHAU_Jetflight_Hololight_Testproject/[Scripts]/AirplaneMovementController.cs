@@ -33,10 +33,19 @@ public class AirplaneMovementController : MonoBehaviour
 
     public GroundContactManager groundContactManagerScript;
 
-    // NEUE EINSTELLUNGEN FÜR BESCHLEUNIGUNG/ABBREMSUNG
+    // EINSTELLUNGEN FÜR BESCHLEUNIGUNG/ABBREMSUNG
     [Header("Acceleration/Deceleration Settings")]
     [Range(0.1f, 10f)][SerializeField] private float accelerationTime = 1.0f; // Zeit in Sekunden, um auf volle Beschleunigung zu kommen
     [Range(0.1f, 10f)][SerializeField] private float decelerationTime = 2.0f; // Zeit in Sekunden, um auf volle Abbremsung zu kommen
+
+    // NEUE SOUND-EINSTELLUNGEN
+    [Header("Engine Sound Settings")]
+    [SerializeField] private AudioSource engineAudioSource; // AudioSource für den Triebwerkssound
+    [Range(0.1f, 3.0f)][SerializeField] private float minPitch = 0.5f; // Minimale Tonhöhe des Sounds (bei 0 Geschwindigkeit)
+    [Range(0.1f, 3.0f)][SerializeField] private float maxPitch = 2.0f; // Maximale Tonhöhe des Sounds (bei MaxSpeed)
+    [Range(0f, 1.0f)][SerializeField] private float minVolume = 0.2f; // Minimale Lautstärke (bei 0 Geschwindigkeit)
+    [Range(0f, 1.0f)][SerializeField] private float maxVolume = 1.0f; // Maximale Lautstärke (bei MaxSpeed)
+    [Range(0.1f, 5f)][SerializeField] private float soundSmoothSpeed = 1.0f; // Glättungsfaktor für Sound-Änderungen
 
     private float joystickYaw; // Wert von -1 (links) bis 1 (rechts)
 
@@ -50,6 +59,8 @@ public class AirplaneMovementController : MonoBehaviour
 
     private Vector3 initialGlobalGravity; // Speichert den ursprünglichen globalen Schwerkraftwert
 
+    private float throttleMaxSpeed; // Holt den maximalen Geschwindigkeitswert vom ThrottleScript
+
     private void Awake()
     {
         initialGlobalGravity = Physics.gravity;
@@ -60,6 +71,16 @@ public class AirplaneMovementController : MonoBehaviour
             if (jetRigidbody == null)
             {
                 Debug.LogError("JetObject hat keinen Rigidbody zugewiesen oder gefunden! Globale Schwerkraftanpassung könnte Probleme verursachen.");
+            }
+        }
+
+        // Sicherstellen, dass eine AudioSource zugewiesen oder gefunden wird
+        if (engineAudioSource == null)
+        {
+            engineAudioSource = jetObject.GetComponent<AudioSource>();
+            if (engineAudioSource == null)
+            {
+                Debug.LogError("JetObject hat keine AudioSource zugewiesen oder gefunden! Triebwerkssound wird nicht abgespielt.");
             }
         }
     }
@@ -74,9 +95,27 @@ public class AirplaneMovementController : MonoBehaviour
             Debug.LogError("MotionSicknessVignetteLogic ist nicht zugewiesen! Bitte im Inspector zuweisen.");
         }
 
+        // Holen des maximalen Geschwindigkeitswerts vom ThrottleSpeedCalc
+        if (throttleSpeedScript != null)
+        {
+            throttleMaxSpeed = throttleSpeedScript.GetMaxThrottleToSpeedValue(); // Angenommen, diese Methode existiert in ThrottleSpeedCalc
+        }
+        else
+        {
+            Debug.LogError("ThrottleSpeedCalc ist nicht zugewiesen! MaxSpeed kann nicht ermittelt werden.");
+            throttleMaxSpeed = 100f; // Fallback-Wert
+        }
+
         // Setze initial targetSpeed und currentSpeed auf den Startwert des Throttle
         targetSpeed = throttleSpeedScript.GetCurrentThrottleToSpeedValue();
         currentSpeed = targetSpeed;
+
+        // Sound abspielen, wenn er noch nicht läuft
+        if (engineAudioSource != null && !engineAudioSource.isPlaying)
+        {
+            engineAudioSource.loop = true; // Stellen Sie sicher, dass der Sound loopt
+            engineAudioSource.Play();
+        }
     }
 
     private void OnDestroy()
@@ -85,6 +124,11 @@ public class AirplaneMovementController : MonoBehaviour
         rightThumbstick.action.canceled -= RightThumbstickReleased;
 
         Physics.gravity = initialGlobalGravity; // Setze die globale Schwerkraft zurück
+
+        if (engineAudioSource != null)
+        {
+            engineAudioSource.Stop(); // Stoppe den Sound beim Zerstören des Skripts
+        }
     }
 
     void RightThumbstickMoved(InputAction.CallbackContext context)
@@ -100,71 +144,47 @@ public class AirplaneMovementController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // 1. Hole die ZIELGESCHWINDIGKEIT vom Throttle
         targetSpeed = throttleSpeedScript.GetCurrentThrottleToSpeedValue();
-
-        // 2. Glätte die aktuelle Geschwindigkeit hin zur Zielgeschwindigkeit
         SmoothSpeed();
-
-        // 3. Wende die Bewegung mit der GEGLÄTTETEN Geschwindigkeit an
         Movement();
-
-        // 4. Passe die globale Schwerkraft an (falls Rigidbody vorhanden)
         AdjustGlobalGravity();
     }
 
     private void Update()
     {
+        UpdateEngineSound(); // Sound-Parameter aktualisieren
         UpdateVignette();
     }
 
-    /// <summary>
-    /// Glättet die aktuelle Geschwindigkeit in Richtung der Zielgeschwindigkeit
-    /// basierend auf Beschleunigungs- oder Abbremszeiten.
-    /// </summary>
     private void SmoothSpeed()
     {
         float smoothTime;
 
         if (targetSpeed > currentSpeed)
         {
-            // Beschleunigen
             smoothTime = accelerationTime;
         }
         else if (targetSpeed < currentSpeed)
         {
-            // Abbremsen
             smoothTime = decelerationTime;
         }
         else
         {
-            // Geschwindigkeit ist gleich, keine Glättung nötig
             return;
         }
 
-        // Verwende Mathf.Lerp, um die Geschwindigkeit über die Zeit zu glätten.
-        // Je größer smoothTime, desto länger dauert die Anpassung.
         currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime / smoothTime);
 
-        // Optional: Einen kleinen Schwellenwert hinzufügen, um zu verhindern, dass die Geschwindigkeit 
-        // sehr nahe an der Zielgeschwindigkeit ist, aber nie ganz erreicht wird (fließkommaungenauigkeit).
         if (Mathf.Abs(currentSpeed - targetSpeed) < 0.01f)
         {
             currentSpeed = targetSpeed;
         }
     }
 
-
     private void Movement()
     {
-        // Obwohl wir den Rigidbody für die globale Schwerkraft nutzen, 
-        // wird die FORWARD-Bewegung weiterhin direkt über Transform.Translate gesteuert,
-        // um die gewünschte nicht-physikalische Beschleunigung zu ermöglichen.
-        // Der Rigidbody wird weiterhin von der angepassten Physics.gravity beeinflusst.
-
         jetObject.transform.Translate(Vector3.forward * currentSpeed * Time.deltaTime);
 
-        // --- Read joystick inputs and apply deadzone ---
         float rawJoystickPitch = joystickInput.transform.localRotation.x;
         float rawJoystickRoll = joystickInput.transform.localRotation.z;
 
@@ -172,9 +192,6 @@ public class AirplaneMovementController : MonoBehaviour
         currentJoystickRoll = Mathf.Abs(rawJoystickRoll) < joystickDeadzone ? 0f : rawJoystickRoll;
         currentJoystickYaw = Mathf.Abs(joystickYaw) < thumbstickDeadzone ? 0f : joystickYaw;
 
-        // --- Apply rotations to the jet (still using Transform.Rotate as per original intent) ---
-        // Wenn du Rotation auch physikalisch über Rigidbody steuern möchtest,
-        // müsstest du hier Rigidbody.MoveRotation verwenden.
         jetObject.transform.Rotate(Vector3.forward * currentJoystickRoll * rollSpeed * Time.deltaTime);
         jetObject.transform.Rotate(Vector3.right * currentJoystickPitch * pitchSpeed * Time.deltaTime);
         jetObject.transform.Rotate(Vector3.up * currentJoystickYaw * yawSpeed * Time.deltaTime);
@@ -189,9 +206,29 @@ public class AirplaneMovementController : MonoBehaviour
         }
         else
         {
-            // Wenn der Jet am Boden ist, volle Schwerkraft anwenden, um ein Abheben zu verhindern.
             Physics.gravity = new Vector3(initialGlobalGravity.x, -maxGlobalGravity, initialGlobalGravity.z);
         }
+    }
+
+    /// <summary>
+    /// Aktualisiert die Tonhöhe und Lautstärke des Triebwerkssounds basierend auf der aktuellen Geschwindigkeit.
+    /// </summary>
+    private void UpdateEngineSound()
+    {
+        if (engineAudioSource == null || throttleMaxSpeed <= 0) return;
+
+        // Normalisiere die aktuelle Geschwindigkeit im Bereich von 0 bis 1
+        // clamp01 stellt sicher, dass der Wert zwischen 0 und 1 bleibt, auch wenn currentSpeed mal über throttleMaxSpeed geht
+        float normalizedSpeed = Mathf.Clamp01(currentSpeed / throttleMaxSpeed);
+
+        // Interpoliere die Tonhöhe basierend auf der normalisierten Geschwindigkeit
+        float targetPitch = Mathf.Lerp(minPitch, maxPitch, normalizedSpeed);
+        // Interpoliere die Lautstärke basierend auf der normalisierten Geschwindigkeit
+        float targetVolume = Mathf.Lerp(minVolume, maxVolume, normalizedSpeed);
+
+        // Glätte die Änderungen an Pitch und Volume für einen natürlicheren Übergang
+        engineAudioSource.pitch = Mathf.Lerp(engineAudioSource.pitch, targetPitch, Time.deltaTime * soundSmoothSpeed);
+        engineAudioSource.volume = Mathf.Lerp(engineAudioSource.volume, targetVolume, Time.deltaTime * soundSmoothSpeed);
     }
 
     private void UpdateVignette()

@@ -31,4 +31,9 @@ public class ThrottleSpeedCalc : MonoBehaviour
 
         return currentSpeed;
     }
+
+    public float GetMaxThrottleToSpeedValue()
+    {
+        return maxSpeedValue; // Oder wie immer du deine maximale Geschwindigkeit definierst
+    }
 }
