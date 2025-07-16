@@ -31,8 +31,12 @@ public class AirplaneMovementController : MonoBehaviour
     // Referenz zum Rigidbody des Jets, um sicherzustellen, dass er die Physik nutzt
     [SerializeField] private Rigidbody jetRigidbody;
 
-    // Du hast GroundContactManagerScript bereits, behalte es.
     public GroundContactManager groundContactManagerScript;
+
+    // NEUE EINSTELLUNGEN FÜR BESCHLEUNIGUNG/ABBREMSUNG
+    [Header("Acceleration/Deceleration Settings")]
+    [Range(0.1f, 10f)][SerializeField] private float accelerationTime = 1.0f; // Zeit in Sekunden, um auf volle Beschleunigung zu kommen
+    [Range(0.1f, 10f)][SerializeField] private float decelerationTime = 2.0f; // Zeit in Sekunden, um auf volle Abbremsung zu kommen
 
     private float joystickYaw; // Wert von -1 (links) bis 1 (rechts)
 
@@ -41,16 +45,15 @@ public class AirplaneMovementController : MonoBehaviour
     private float currentJoystickRoll;
     private float currentJoystickYaw;
 
-    public float currentSpeed; // Calculated speed
+    public float currentSpeed; // Tatsächliche, geglättete Geschwindigkeit
+    private float targetSpeed; // Die von ThrottleSpeedCalc gewünschte Geschwindigkeit
 
     private Vector3 initialGlobalGravity; // Speichert den ursprünglichen globalen Schwerkraftwert
 
     private void Awake()
     {
-        // Speichere den ursprünglichen globalen Schwerkraftwert von Unity
         initialGlobalGravity = Physics.gravity;
 
-        // Sicherstellen, dass ein Rigidbody zugewiesen ist oder gefunden wird
         if (jetRigidbody == null)
         {
             jetRigidbody = jetObject.GetComponent<Rigidbody>();
@@ -70,6 +73,10 @@ public class AirplaneMovementController : MonoBehaviour
         {
             Debug.LogError("MotionSicknessVignetteLogic ist nicht zugewiesen! Bitte im Inspector zuweisen.");
         }
+
+        // Setze initial targetSpeed und currentSpeed auf den Startwert des Throttle
+        targetSpeed = throttleSpeedScript.GetCurrentThrottleToSpeedValue();
+        currentSpeed = targetSpeed;
     }
 
     private void OnDestroy()
@@ -77,8 +84,7 @@ public class AirplaneMovementController : MonoBehaviour
         rightThumbstick.action.performed -= RightThumbstickMoved;
         rightThumbstick.action.canceled -= RightThumbstickReleased;
 
-        // Setze die globale Schwerkraft auf den ursprünglichen Wert zurück, wenn das Skript zerstört wird
-        Physics.gravity = initialGlobalGravity;
+        Physics.gravity = initialGlobalGravity; // Setze die globale Schwerkraft zurück
     }
 
     void RightThumbstickMoved(InputAction.CallbackContext context)
@@ -94,45 +100,69 @@ public class AirplaneMovementController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // Physik-Updates sollten in FixedUpdate erfolgen
-        currentSpeed = throttleSpeedScript.GetCurrentThrottleToSpeedValue();
+        // 1. Hole die ZIELGESCHWINDIGKEIT vom Throttle
+        targetSpeed = throttleSpeedScript.GetCurrentThrottleToSpeedValue();
+
+        // 2. Glätte die aktuelle Geschwindigkeit hin zur Zielgeschwindigkeit
+        SmoothSpeed();
+
+        // 3. Wende die Bewegung mit der GEGLÄTTETEN Geschwindigkeit an
         Movement();
-        AdjustGlobalGravity(); // Globale Schwerkraft anpassen
+
+        // 4. Passe die globale Schwerkraft an (falls Rigidbody vorhanden)
+        AdjustGlobalGravity();
     }
 
     private void Update()
     {
-        // Nicht-physikalische Updates wie Vignette
         UpdateVignette();
     }
 
-    private void Movement()
+    /// <summary>
+    /// Glättet die aktuelle Geschwindigkeit in Richtung der Zielgeschwindigkeit
+    /// basierend auf Beschleunigungs- oder Abbremszeiten.
+    /// </summary>
+    private void SmoothSpeed()
     {
-        // Wenn du die globale Schwerkraft verwendest, solltest du auch physikalische Methoden für die Bewegung nutzen.
-        // Wenn der Jet keinen Rigidbody hat oder du ihn nicht physikalisch bewegen willst,
-        // kannst du weiterhin transform.Translate verwenden, aber die Schwerkraft wirkt dann
-        // nur auf andere Rigidbodies in der Szene.
-        if (jetRigidbody != null)
+        float smoothTime;
+
+        if (targetSpeed > currentSpeed)
         {
-            // Bewegen des Rigidbodies
-            jetRigidbody.MovePosition(jetRigidbody.position + jetObject.transform.forward * currentSpeed * Time.deltaTime);
-
-            // Rotationen anwenden
-            Quaternion pitchRotation = Quaternion.AngleAxis(currentJoystickPitch * pitchSpeed * Time.deltaTime, Vector3.right);
-            Quaternion rollRotation = Quaternion.AngleAxis(currentJoystickRoll * rollSpeed * Time.deltaTime, Vector3.forward);
-            Quaternion yawRotation = Quaternion.AngleAxis(currentJoystickYaw * yawSpeed * Time.deltaTime, Vector3.up);
-
-            jetRigidbody.MoveRotation(jetRigidbody.rotation * yawRotation * pitchRotation * rollRotation);
+            // Beschleunigen
+            smoothTime = accelerationTime;
+        }
+        else if (targetSpeed < currentSpeed)
+        {
+            // Abbremsen
+            smoothTime = decelerationTime;
         }
         else
         {
-            // Fallback, wenn kein Rigidbody zugewiesen ist, behalte die Transform-Bewegung bei.
-            // Beachte, dass die globale Schwerkraft in diesem Fall nicht direkt auf den Jet wirkt.
-            jetObject.transform.Translate(Vector3.forward * currentSpeed * Time.deltaTime);
-            jetObject.transform.Rotate(Vector3.forward * currentJoystickRoll * rollSpeed * Time.deltaTime);
-            jetObject.transform.Rotate(Vector3.right * currentJoystickPitch * pitchSpeed * Time.deltaTime);
-            jetObject.transform.Rotate(Vector3.up * currentJoystickYaw * yawSpeed * Time.deltaTime);
+            // Geschwindigkeit ist gleich, keine Glättung nötig
+            return;
         }
+
+        // Verwende Mathf.Lerp, um die Geschwindigkeit über die Zeit zu glätten.
+        // Je größer smoothTime, desto länger dauert die Anpassung.
+        currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime / smoothTime);
+
+        // Optional: Einen kleinen Schwellenwert hinzufügen, um zu verhindern, dass die Geschwindigkeit 
+        // sehr nahe an der Zielgeschwindigkeit ist, aber nie ganz erreicht wird (fließkommaungenauigkeit).
+        if (Mathf.Abs(currentSpeed - targetSpeed) < 0.01f)
+        {
+            currentSpeed = targetSpeed;
+        }
+    }
+
+
+    private void Movement()
+    {
+        // Obwohl wir den Rigidbody für die globale Schwerkraft nutzen, 
+        // wird die FORWARD-Bewegung weiterhin direkt über Transform.Translate gesteuert,
+        // um die gewünschte nicht-physikalische Beschleunigung zu ermöglichen.
+        // Der Rigidbody wird weiterhin von der angepassten Physics.gravity beeinflusst.
+
+        jetObject.transform.Translate(Vector3.forward * currentSpeed * Time.deltaTime);
 
         // --- Read joystick inputs and apply deadzone ---
         float rawJoystickPitch = joystickInput.transform.localRotation.x;
@@ -141,25 +171,25 @@ public class AirplaneMovementController : MonoBehaviour
         currentJoystickPitch = Mathf.Abs(rawJoystickPitch) < joystickDeadzone ? 0f : rawJoystickPitch;
         currentJoystickRoll = Mathf.Abs(rawJoystickRoll) < joystickDeadzone ? 0f : rawJoystickRoll;
         currentJoystickYaw = Mathf.Abs(joystickYaw) < thumbstickDeadzone ? 0f : joystickYaw;
+
+        // --- Apply rotations to the jet (still using Transform.Rotate as per original intent) ---
+        // Wenn du Rotation auch physikalisch über Rigidbody steuern möchtest,
+        // müsstest du hier Rigidbody.MoveRotation verwenden.
+        jetObject.transform.Rotate(Vector3.forward * currentJoystickRoll * rollSpeed * Time.deltaTime);
+        jetObject.transform.Rotate(Vector3.right * currentJoystickPitch * pitchSpeed * Time.deltaTime);
+        jetObject.transform.Rotate(Vector3.up * currentJoystickYaw * yawSpeed * Time.deltaTime);
     }
 
     private void AdjustGlobalGravity()
     {
-        // Nur die Schwerkraft anpassen, wenn der Jet nicht am Boden ist
         if (!groundContactManagerScript.isGrounded)
         {
-            // Berechne den Schwerkraft-Multiplikator basierend auf der Geschwindigkeit
-            // InverseLerp gibt 1 zurück, wenn currentSpeed 0 ist, und 0, wenn currentSpeed >= minSpeedForZeroGlobalGravity ist.
             float gravityMultiplier = Mathf.InverseLerp(minSpeedForZeroGlobalGravity, 0, currentSpeed);
-
-            // Setze die Y-Komponente der globalen Schwerkraft
-            // Beachte, dass Physics.gravity ein Vector3 ist, dessen x und z Komponenten wir nicht ändern wollen.
             Physics.gravity = new Vector3(initialGlobalGravity.x, -maxGlobalGravity * gravityMultiplier, initialGlobalGravity.z);
         }
         else
         {
-            // Wenn der Jet am Boden ist, setze die Schwerkraft auf den maximalen Wert, um ihn am Boden zu halten
-            // Oder du kannst sie auf den Standardwert zurücksetzen, je nachdem, was du bevorzugst.
+            // Wenn der Jet am Boden ist, volle Schwerkraft anwenden, um ein Abheben zu verhindern.
             Physics.gravity = new Vector3(initialGlobalGravity.x, -maxGlobalGravity, initialGlobalGravity.z);
         }
     }

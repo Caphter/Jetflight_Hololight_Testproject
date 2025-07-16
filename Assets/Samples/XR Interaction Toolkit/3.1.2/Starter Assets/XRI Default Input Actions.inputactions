@@ -1987,7 +1987,7 @@
                 {
                     "name": "",
                     "id": "9a46d7e3-c631-4c56-a696-1f73d6f804db",
-                    "path": "<OculusTouchController>/secondaryButton",
+                    "path": "<XRController>{RightHand}/{SecondaryButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
