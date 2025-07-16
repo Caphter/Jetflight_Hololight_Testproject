@@ -36,7 +36,7 @@ public class GroundContactManager : MonoBehaviour
             currentGroundedWheels++;
         }
 
-        if(currentGroundedWheels > 0)
+        if(currentGroundedWheels == 3)
         {
             isGrounded = true;
         }

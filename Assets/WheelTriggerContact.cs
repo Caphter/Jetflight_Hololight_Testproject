@@ -6,7 +6,7 @@ public class WheelTriggerContact : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Ground"))
+        if (other.CompareTag("ground"))
         {
             isTouchingGround = true;
         }
@@ -14,7 +14,7 @@ public class WheelTriggerContact : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Ground"))
+        if (other.CompareTag("ground"))
         {
             isTouchingGround = false;
         }
