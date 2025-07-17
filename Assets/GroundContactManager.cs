@@ -4,6 +4,7 @@ using UnityEngine;
 public class GroundContactManager : MonoBehaviour
 {
     public int currentGroundedWheels = 0;
+    public bool landed = true;
     public bool isGrounded = true;
 
     [Header("Wheel Touching Scripts")]
@@ -39,10 +40,17 @@ public class GroundContactManager : MonoBehaviour
         if(currentGroundedWheels == 3)
         {
             isGrounded = true;
+
+            if(!landed)
+            {
+                landed = true;
+                FindObjectOfType<AudioManager>().Play("Jet_Landing");
+            }
         }
         else
         {
             isGrounded = false;
+            landed = false;
         }
     }
 }

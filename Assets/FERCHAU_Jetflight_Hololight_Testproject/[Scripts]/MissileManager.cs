@@ -52,6 +52,7 @@ public class MissileManager : MonoBehaviour
         triggerPressedButton.action.canceled += TriggerWasReleased;
     }
 
+
     private void Update()
     {
         // Wenn der Trigger gedrückt ist und noch nicht als gedrückt registriert wurde
@@ -111,8 +112,9 @@ public class MissileManager : MonoBehaviour
         missile.transform.parent = null;
         missileParticleSystem.Play();
 
-        StartCoroutine(MoveMissile(missile, side));
+        FindObjectOfType<AudioManager>().Play("Missile_Launch");
 
+        StartCoroutine(MoveMissile(missile, side));
 
         // Rakete fliegt für die angegebene Zeit oder bis zur Kollision
         float elapsedTime = 0f;
@@ -126,6 +128,8 @@ public class MissileManager : MonoBehaviour
         // Check if loop exited due to collision
         collided = (side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain);
 
+        FindObjectOfType<AudioManager>().Stop("Missile_Launch");
+
         // Stop particle system
         missileParticleSystem.Stop();
 
@@ -138,6 +142,7 @@ public class MissileManager : MonoBehaviour
         }
 
         GameObject obj = Instantiate(explosionPrefabs[Random.Range(0, explosionPrefabs.Count)], explosionPosition, Quaternion.identity);
+        FindObjectOfType<AudioManager>().Play("Missile_Explosion");
         Destroy(obj, 1.5f);
 
         // Rakete über 0.25s ausfaden
