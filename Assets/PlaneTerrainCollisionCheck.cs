@@ -1,47 +1,52 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // Wichtig: Für das Neuladen von Szenen
-using System.Collections; // Für Coroutinen
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class PlaneTerrainCollisionCheck : MonoBehaviour
 {
-    [Header("Screen Fade Settings")]
-    [SerializeField] private CanvasGroup fadePanelCanvasGroup; // Zuweisen im Inspector: Ein UI-Panel mit CanvasGroup
-    [SerializeField] private float fadeDuration = 1.0f; // Dauer des Abdunkelns in Sekunden
+    [SerializeField] private AirplaneMovementController airplaneMovementControllerScript;
+    [SerializeField] private ScreenFaderVR screenFaderVRScript;
+    [SerializeField] private GameObject crashExplosion;
+    [SerializeField] private Transform crashExplosionSpawnPoint;
+    [SerializeField] private AudioSource engineSound;
+    private bool crashTriggered = false;
 
-    private bool isFading = false; // Verhindert mehrfaches Auslösen des Fades
-
-    // OnTriggerEnter wird aufgerufen, wenn dieser Collider (als Trigger) einen anderen Collider berührt
-    private void OnTriggerEnter(Collider other)
+    private void Start()
     {
-        // Überprüfen, ob das Objekt mit dem Tag "Terrain" kollidiert ist UND der Fade-Vorgang noch nicht läuft
-        if (other.CompareTag("Terrain") && !isFading)
-        {
-            isFading = true; // Setze Flag, um erneutes Auslösen zu verhindern
-            Debug.Log("Kollision mit Terrain! Bildschirm wird abgedunkelt und Szene neu geladen.");
-            StartCoroutine(FadeOutAndRestartScene());
-        }
+        crashTriggered = false;
+        airplaneMovementControllerScript.collisionFreeze = false;
     }
 
-    private IEnumerator FadeOutAndRestartScene()
+    private IEnumerator HandleCrash()
     {
-        // Stelle sicher, dass das Panel am Anfang komplett transparent ist und Interaktionen blockiert
-        fadePanelCanvasGroup.alpha = 0f;
-        fadePanelCanvasGroup.blocksRaycasts = true; // Blockiert Eingaben, während gefaded wird
+        crashTriggered = true;
+        airplaneMovementControllerScript.collisionFreeze = true; // Plane freezt
 
-        float timer = 0f;
-        while (timer < fadeDuration)
+        if (crashExplosion != null && crashExplosionSpawnPoint != null)
         {
-            timer += Time.deltaTime;
-            // Lineares Überblenden der Alpha-Werte von 0 (transparent) auf 1 (undurchsichtig)
-            fadePanelCanvasGroup.alpha = Mathf.Lerp(0f, 1f, timer / fadeDuration);
-            yield return null; // Warte einen Frame
+            FindObjectOfType<AudioManager>().Play("Crash_Explosion");
+            engineSound.Stop();
+
+            GameObject currentExplosion = Instantiate(crashExplosion, crashExplosionSpawnPoint.position, crashExplosionSpawnPoint.rotation);
+            Destroy(currentExplosion, 1.5f);
         }
-        fadePanelCanvasGroup.alpha = 1f; // Sicherstellen, dass es komplett undurchsichtig ist
 
-        // Warte einen kurzen Moment, nachdem der Bildschirm schwarz ist (optional)
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(1f);
 
-        // Lade die aktuelle Szene neu
-        //SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        screenFaderVRScript.StartFadeToBlack();
+
+        yield return new WaitForSeconds(screenFaderVRScript.defaultFadeOutDuration);
+
+        yield return new WaitForSeconds(1f);
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Terrain") && !crashTriggered)
+        {
+            StartCoroutine(HandleCrash());
+        }
     }
 }

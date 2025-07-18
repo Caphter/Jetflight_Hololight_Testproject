@@ -1,10 +1,9 @@
 using UnityEngine;
-
+using System.Collections;
 
 public class GroundContactManager : MonoBehaviour
 {
     public int currentGroundedWheels = 0;
-    public bool landed = true;
     public bool isGrounded = true;
 
     [Header("Wheel Touching Scripts")]
@@ -12,6 +11,11 @@ public class GroundContactManager : MonoBehaviour
     [SerializeField] private WheelTriggerContact rearLeftWheelContact;
     [SerializeField] private WheelTriggerContact rearRightWheelContact;
 
+    [Header("Take-off/Landing Settings")]
+    [SerializeField] private float minAirTimeForTakeOff = 3.0f;
+
+    private bool hasTakenOffAfterLanding = false;
+    private float timeNotInAir = 0f;
 
     void FixedUpdate()
     {
@@ -22,7 +26,7 @@ public class GroundContactManager : MonoBehaviour
     {
         currentGroundedWheels = 0;
 
-        if(frontWheelContact.isTouchingGround)
+        if (frontWheelContact.isTouchingGround)
         {
             currentGroundedWheels++;
         }
@@ -37,20 +41,26 @@ public class GroundContactManager : MonoBehaviour
             currentGroundedWheels++;
         }
 
-        if(currentGroundedWheels == 3)
+        if (currentGroundedWheels >= 1)
         {
             isGrounded = true;
+            timeNotInAir = 0f;
 
-            if(!landed)
+            if (hasTakenOffAfterLanding)
             {
-                landed = true;
                 FindObjectOfType<AudioManager>().Play("Jet_Landing");
+                hasTakenOffAfterLanding = false;
             }
         }
         else
         {
             isGrounded = false;
-            landed = false;
+            timeNotInAir += Time.fixedDeltaTime;
+
+            if (timeNotInAir >= minAirTimeForTakeOff)
+            {
+                hasTakenOffAfterLanding = true;
+            }
         }
     }
 }

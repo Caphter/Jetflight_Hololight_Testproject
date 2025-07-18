@@ -61,6 +61,8 @@ public class AirplaneMovementController : MonoBehaviour
 
     private float throttleMaxSpeed; // Holt den maximalen Geschwindigkeitswert vom ThrottleScript
 
+    public bool collisionFreeze = false;
+
     private void Awake()
     {
         initialGlobalGravity = Physics.gravity;
@@ -144,6 +146,11 @@ public class AirplaneMovementController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if(collisionFreeze)
+        {
+            return;
+        }
+
         targetSpeed = throttleSpeedScript.GetCurrentThrottleToSpeedValue();
         SmoothSpeed();
         Movement();
@@ -152,7 +159,12 @@ public class AirplaneMovementController : MonoBehaviour
 
     private void Update()
     {
-        UpdateEngineSound(); // Sound-Parameter aktualisieren
+        if (collisionFreeze)
+        {
+            return;
+        }
+
+        UpdateEngineSound();
         UpdateVignette();
     }
 
