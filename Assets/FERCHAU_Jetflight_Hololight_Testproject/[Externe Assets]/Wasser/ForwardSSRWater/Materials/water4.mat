@@ -97,9 +97,9 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _UseSSR: 1
-    - _WaterDepthOffset: 0.075
+    - _WaterDepthOffset: 0.126
     - _WaterDistortScale: 0
-    - _WaterMuddyScale: 1.163
+    - _WaterMuddyScale: 1.234
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
