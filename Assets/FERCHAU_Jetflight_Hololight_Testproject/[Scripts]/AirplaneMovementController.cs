@@ -11,7 +11,7 @@ public class AirplaneMovementController : MonoBehaviour
     [SerializeField] private GameObject joystickInput; // Joystick for control
     [SerializeField] private ThrottleSpeedCalc throttleSpeedScript; // Speed calculation script
     [SerializeField] private GameObject jetObject;
-    [SerializeField] private MotionSicknessVignetteLogic vignetteLogic; // Referenz zum Vignette-Skript
+    // [SerializeField] private MotionSicknessVignetteLogic vignetteLogic; // <--- Diese Referenz wird NICHT MEHR BENÖTIGT
 
     [Header("Rotating Speeds")]
     [Range(5f, 500f)][SerializeField] private float pitchSpeed = 100f; // Pitch speed
@@ -49,10 +49,15 @@ public class AirplaneMovementController : MonoBehaviour
 
     private float joystickYaw; // Wert von -1 (links) bis 1 (rechts)
 
-    // Speichern der aktuellen Joystick/Thumbstick Inputs nach Deadzone-Anwendung
-    private float currentJoystickPitch;
-    private float currentJoystickRoll;
-    private float currentJoystickYaw;
+    // Öffentliche Properties für den Zugriff von MotionSicknessVignetteLogic
+    public float CurrentJoystickPitch { get; private set; }
+    public float CurrentJoystickRoll { get; private set; }
+    public float CurrentJoystickYaw { get; private set; }
+
+    // HINWEIS: pitchSpeed, rollSpeed, yawSpeed sind bereits public (oder protected, wenn gewollt),
+    // da sie direkt im Inspector zugewiesen werden.
+    // Wenn du sie nicht im Inspector setzen willst, müsstest du sie hier auch als Property anbieten.
+    // Für diesen Fall gehen wir davon aus, dass die SerializedFields als "Public" für den Zugriff genügen.
 
     public float currentSpeed; // Tatsächliche, geglättete Geschwindigkeit
     private float targetSpeed; // Die von ThrottleSpeedCalc gewünschte Geschwindigkeit
@@ -92,10 +97,12 @@ public class AirplaneMovementController : MonoBehaviour
         rightThumbstick.action.performed += RightThumbstickMoved;
         rightThumbstick.action.canceled += RightThumbstickReleased;
 
-        if (vignetteLogic == null)
-        {
-            Debug.LogError("MotionSicknessVignetteLogic ist nicht zugewiesen! Bitte im Inspector zuweisen.");
-        }
+        // vignetteLogic wird hier nicht mehr benötigt, da MotionSicknessVignetteLogic selbst
+        // auf diesen Controller zugreift.
+        // if (vignetteLogic == null)
+        // {
+        //     Debug.LogError("MotionSicknessVignetteLogic ist nicht zugewiesen! Bitte im Inspector zuweisen.");
+        // }
 
         // Holen des maximalen Geschwindigkeitswerts vom ThrottleSpeedCalc
         if (throttleSpeedScript != null)
@@ -146,7 +153,7 @@ public class AirplaneMovementController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if(collisionFreeze)
+        if (collisionFreeze)
         {
             return;
         }
@@ -165,7 +172,7 @@ public class AirplaneMovementController : MonoBehaviour
         }
 
         UpdateEngineSound();
-        UpdateVignette();
+        // UpdateVignette(); // <--- Diese Methode wird NICHT MEHR HIER aufgerufen
     }
 
     private void SmoothSpeed()
@@ -200,13 +207,15 @@ public class AirplaneMovementController : MonoBehaviour
         float rawJoystickPitch = joystickInput.transform.localRotation.x;
         float rawJoystickRoll = joystickInput.transform.localRotation.z;
 
-        currentJoystickPitch = Mathf.Abs(rawJoystickPitch) < joystickDeadzone ? 0f : rawJoystickPitch;
-        currentJoystickRoll = Mathf.Abs(rawJoystickRoll) < joystickDeadzone ? 0f : rawJoystickRoll;
-        currentJoystickYaw = Mathf.Abs(joystickYaw) < thumbstickDeadzone ? 0f : joystickYaw;
+        // Setze die öffentlichen Properties, damit MotionSicknessVignetteLogic darauf zugreifen kann
+        CurrentJoystickPitch = Mathf.Abs(rawJoystickPitch) < joystickDeadzone ? 0f : rawJoystickPitch;
+        CurrentJoystickRoll = Mathf.Abs(rawJoystickRoll) < joystickDeadzone ? 0f : rawJoystickRoll;
+        CurrentJoystickYaw = Mathf.Abs(joystickYaw) < thumbstickDeadzone ? 0f : joystickYaw;
 
-        jetObject.transform.Rotate(Vector3.forward * currentJoystickRoll * rollSpeed * Time.deltaTime);
-        jetObject.transform.Rotate(Vector3.right * currentJoystickPitch * pitchSpeed * Time.deltaTime);
-        jetObject.transform.Rotate(Vector3.up * currentJoystickYaw * yawSpeed * Time.deltaTime);
+
+        jetObject.transform.Rotate(Vector3.forward * CurrentJoystickRoll * rollSpeed * Time.deltaTime);
+        jetObject.transform.Rotate(Vector3.right * CurrentJoystickPitch * pitchSpeed * Time.deltaTime);
+        jetObject.transform.Rotate(Vector3.up * CurrentJoystickYaw * yawSpeed * Time.deltaTime);
     }
 
     private void AdjustGlobalGravity()
@@ -230,7 +239,6 @@ public class AirplaneMovementController : MonoBehaviour
         if (engineAudioSource == null || throttleMaxSpeed <= 0) return;
 
         // Normalisiere die aktuelle Geschwindigkeit im Bereich von 0 bis 1
-        // clamp01 stellt sicher, dass der Wert zwischen 0 und 1 bleibt, auch wenn currentSpeed mal über throttleMaxSpeed geht
         float normalizedSpeed = Mathf.Clamp01(currentSpeed / throttleMaxSpeed);
 
         // Interpoliere die Tonhöhe basierend auf der normalisierten Geschwindigkeit
@@ -243,12 +251,8 @@ public class AirplaneMovementController : MonoBehaviour
         engineAudioSource.volume = Mathf.Lerp(engineAudioSource.volume, targetVolume, Time.deltaTime * soundSmoothSpeed);
     }
 
-    private void UpdateVignette()
-    {
-        if (vignetteLogic != null)
-        {
-            vignetteLogic.UpdateVignette(currentJoystickPitch, currentJoystickRoll, currentJoystickYaw,
-                                        pitchSpeed, rollSpeed, yawSpeed);
-        }
-    }
+    // NEU: Öffentliche Properties, um die Rotationsgeschwindigkeiten bereitzustellen
+    public float PitchSpeed => pitchSpeed;
+    public float RollSpeed => rollSpeed;
+    public float YawSpeed => yawSpeed;
 }
