@@ -7,7 +7,7 @@ public class MissileTerrainCollisionChecker : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.CompareTag("Terrain"))
+        if(other.CompareTag("Terrain") || other.CompareTag("Target"))
         {
             missileManager.CollidedWithTerrain(missileSide);
         }

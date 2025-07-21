@@ -1,72 +1,70 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// Controls the movement of the airplane based on joystick input. It calculates the speed of the airplane and moves it forward.
-/// The airplane can be rotated around the x, y, and z axes (Pitch, Roll, and Yaw).
-/// </summary>
 public class AirplaneMovementController : MonoBehaviour
 {
     [Header("Joystick Input")]
-    [SerializeField] private GameObject joystickInput; // Joystick for control
-    [SerializeField] private ThrottleSpeedCalc throttleSpeedScript; // Speed calculation script
+    [SerializeField] private GameObject joystickInput;
+    [SerializeField] private ThrottleSpeedCalc throttleSpeedScript;
     [SerializeField] private GameObject jetObject;
-    // [SerializeField] private MotionSicknessVignetteLogic vignetteLogic; // <--- Diese Referenz wird NICHT MEHR BENÖTIGT
 
     [Header("Rotating Speeds")]
-    [Range(5f, 500f)][SerializeField] private float pitchSpeed = 100f; // Pitch speed
-    [Range(5f, 500f)][SerializeField] private float rollSpeed = 200f; // Roll speed
-    [Range(5f, 200f)][SerializeField] private float yawSpeed = 50f; // Yaw speed (rotation around Y-axis)
+    [Range(5f, 500f)][SerializeField] private float pitchSpeed = 100f;
+    [Range(5f, 500f)][SerializeField] private float rollSpeed = 200f;
+    [Range(5f, 200f)][SerializeField] private float yawSpeed = 50f;
 
     [Header("Deadzone Settings")]
-    [Range(0f, 1f)][SerializeField] private float joystickDeadzone = 0.05f; // Deadzone for joystick deflection
-    [Range(0f, 1f)][SerializeField] private float thumbstickDeadzone = 0.1f; // Deadzone for thumbstick deflection
+    [Range(0f, 1f)][SerializeField] private float joystickDeadzone = 0.05f;
+    [Range(0f, 1f)][SerializeField] private float thumbstickDeadzone = 0.1f;
+
+    // NEU: Auto-Stabilisierungseinstellungen
+    [Header("Auto-Stabilization Settings")]
+    [Tooltip("Geschwindigkeit, mit der das Flugzeug auf Pitch (X-Achse) und Roll (Z-Achse) stabilisiert wird, wenn der Joystick in der Deadzone ist.")]
+    [Range(0.1f, 10f)][SerializeField] private float stabilizationSpeed = 2.0f;
+
+    [Tooltip("Maximale Gier-Neigung (in Grad), bei der die automatische Stabilisierung noch versucht, auf Null zu stellen. Bei größeren Neigungen hat der Spieler volle Kontrolle.")]
+    [Range(0f, 90f)][SerializeField] private float maxYawStabilizationAngle = 45f;
+
+    [Tooltip("Der Winkel-Schwellenwert (in Grad), unter dem die automatische Stabilisierung den Wert als 'erreicht' betrachtet und weitere Korrekturen stoppt.")]
+    [Range(0.001f, 1f)][SerializeField] private float stabilizationAngleThreshold = 0.05f; // NEU: Schwellenwert für Zittern
 
     public InputActionReference rightThumbstick;
 
-    // Einstellungen für die dynamische globale Schwerkraft
     [Header("Dynamic Global Gravity Settings")]
-    [SerializeField] private float maxGlobalGravity = 9.81f; // Maximale globale Schwerkraft (positiver Wert)
-    [SerializeField] private float minSpeedForZeroGlobalGravity = 100f; // Geschwindigkeit, bei der die globale Schwerkraft 0 wird
-    // Referenz zum Rigidbody des Jets, um sicherzustellen, dass er die Physik nutzt
+    [SerializeField] private float maxGlobalGravity = 9.81f;
+    [SerializeField] private float minSpeedForZeroGlobalGravity = 100f;
     [SerializeField] private Rigidbody jetRigidbody;
 
     public GroundContactManager groundContactManagerScript;
 
-    // EINSTELLUNGEN FÜR BESCHLEUNIGUNG/ABBREMSUNG
     [Header("Acceleration/Deceleration Settings")]
-    [Range(0.1f, 10f)][SerializeField] private float accelerationTime = 1.0f; // Zeit in Sekunden, um auf volle Beschleunigung zu kommen
-    [Range(0.1f, 10f)][SerializeField] private float decelerationTime = 2.0f; // Zeit in Sekunden, um auf volle Abbremsung zu kommen
+    [Range(0.1f, 10f)][SerializeField] private float accelerationTime = 1.0f;
+    [Range(0.1f, 10f)][SerializeField] private float decelerationTime = 2.0f;
 
-    // NEUE SOUND-EINSTELLUNGEN
     [Header("Engine Sound Settings")]
-    [SerializeField] private AudioSource engineAudioSource; // AudioSource für den Triebwerkssound
-    [Range(0.1f, 3.0f)][SerializeField] private float minPitch = 0.5f; // Minimale Tonhöhe des Sounds (bei 0 Geschwindigkeit)
-    [Range(0.1f, 3.0f)][SerializeField] private float maxPitch = 2.0f; // Maximale Tonhöhe des Sounds (bei MaxSpeed)
-    [Range(0f, 1.0f)][SerializeField] private float minVolume = 0.2f; // Minimale Lautstärke (bei 0 Geschwindigkeit)
-    [Range(0f, 1.0f)][SerializeField] private float maxVolume = 1.0f; // Maximale Lautstärke (bei MaxSpeed)
-    [Range(0.1f, 5f)][SerializeField] private float soundSmoothSpeed = 1.0f; // Glättungsfaktor für Sound-Änderungen
+    [SerializeField] private AudioSource engineAudioSource;
+    [Range(0.1f, 3.0f)][SerializeField] private float minPitch = 0.5f;
+    [Range(0.1f, 3.0f)][SerializeField] private float maxPitch = 2.0f;
+    [Range(0f, 1.0f)][SerializeField] private float minVolume = 0.2f;
+    [Range(0f, 1.0f)][SerializeField] private float maxVolume = 1.0f;
+    [Range(0.1f, 5f)][SerializeField] private float soundSmoothSpeed = 1.0f;
 
-    private float joystickYaw; // Wert von -1 (links) bis 1 (rechts)
+    private float joystickYaw;
 
-    // Öffentliche Properties für den Zugriff von MotionSicknessVignetteLogic
     public float CurrentJoystickPitch { get; private set; }
     public float CurrentJoystickRoll { get; private set; }
     public float CurrentJoystickYaw { get; private set; }
 
-    // HINWEIS: pitchSpeed, rollSpeed, yawSpeed sind bereits public (oder protected, wenn gewollt),
-    // da sie direkt im Inspector zugewiesen werden.
-    // Wenn du sie nicht im Inspector setzen willst, müsstest du sie hier auch als Property anbieten.
-    // Für diesen Fall gehen wir davon aus, dass die SerializedFields als "Public" für den Zugriff genügen.
+    public float currentSpeed;
+    private float targetSpeed;
 
-    public float currentSpeed; // Tatsächliche, geglättete Geschwindigkeit
-    private float targetSpeed; // Die von ThrottleSpeedCalc gewünschte Geschwindigkeit
+    private Vector3 initialGlobalGravity;
 
-    private Vector3 initialGlobalGravity; // Speichert den ursprünglichen globalen Schwerkraftwert
-
-    private float throttleMaxSpeed; // Holt den maximalen Geschwindigkeitswert vom ThrottleScript
+    private float throttleMaxSpeed;
 
     public bool collisionFreeze = false;
+
+    public bool controllerIsHeld = false;
 
     private void Awake()
     {
@@ -81,7 +79,6 @@ public class AirplaneMovementController : MonoBehaviour
             }
         }
 
-        // Sicherstellen, dass eine AudioSource zugewiesen oder gefunden wird
         if (engineAudioSource == null)
         {
             engineAudioSource = jetObject.GetComponent<AudioSource>();
@@ -97,32 +94,22 @@ public class AirplaneMovementController : MonoBehaviour
         rightThumbstick.action.performed += RightThumbstickMoved;
         rightThumbstick.action.canceled += RightThumbstickReleased;
 
-        // vignetteLogic wird hier nicht mehr benötigt, da MotionSicknessVignetteLogic selbst
-        // auf diesen Controller zugreift.
-        // if (vignetteLogic == null)
-        // {
-        //     Debug.LogError("MotionSicknessVignetteLogic ist nicht zugewiesen! Bitte im Inspector zuweisen.");
-        // }
-
-        // Holen des maximalen Geschwindigkeitswerts vom ThrottleSpeedCalc
         if (throttleSpeedScript != null)
         {
-            throttleMaxSpeed = throttleSpeedScript.GetMaxThrottleToSpeedValue(); // Angenommen, diese Methode existiert in ThrottleSpeedCalc
+            throttleMaxSpeed = throttleSpeedScript.GetMaxThrottleToSpeedValue();
         }
         else
         {
             Debug.LogError("ThrottleSpeedCalc ist nicht zugewiesen! MaxSpeed kann nicht ermittelt werden.");
-            throttleMaxSpeed = 100f; // Fallback-Wert
+            throttleMaxSpeed = 100f;
         }
 
-        // Setze initial targetSpeed und currentSpeed auf den Startwert des Throttle
         targetSpeed = throttleSpeedScript.GetCurrentThrottleToSpeedValue();
         currentSpeed = targetSpeed;
 
-        // Sound abspielen, wenn er noch nicht läuft
         if (engineAudioSource != null && !engineAudioSource.isPlaying)
         {
-            engineAudioSource.loop = true; // Stellen Sie sicher, dass der Sound loopt
+            engineAudioSource.loop = true;
             engineAudioSource.Play();
         }
     }
@@ -132,11 +119,11 @@ public class AirplaneMovementController : MonoBehaviour
         rightThumbstick.action.performed -= RightThumbstickMoved;
         rightThumbstick.action.canceled -= RightThumbstickReleased;
 
-        Physics.gravity = initialGlobalGravity; // Setze die globale Schwerkraft zurück
+        Physics.gravity = initialGlobalGravity;
 
         if (engineAudioSource != null)
         {
-            engineAudioSource.Stop(); // Stoppe den Sound beim Zerstören des Skripts
+            engineAudioSource.Stop();
         }
     }
 
@@ -172,7 +159,6 @@ public class AirplaneMovementController : MonoBehaviour
         }
 
         UpdateEngineSound();
-        // UpdateVignette(); // <--- Diese Methode wird NICHT MEHR HIER aufgerufen
     }
 
     private void SmoothSpeed()
@@ -207,15 +193,68 @@ public class AirplaneMovementController : MonoBehaviour
         float rawJoystickPitch = joystickInput.transform.localRotation.x;
         float rawJoystickRoll = joystickInput.transform.localRotation.z;
 
-        // Setze die öffentlichen Properties, damit MotionSicknessVignetteLogic darauf zugreifen kann
         CurrentJoystickPitch = Mathf.Abs(rawJoystickPitch) < joystickDeadzone ? 0f : rawJoystickPitch;
         CurrentJoystickRoll = Mathf.Abs(rawJoystickRoll) < joystickDeadzone ? 0f : rawJoystickRoll;
         CurrentJoystickYaw = Mathf.Abs(joystickYaw) < thumbstickDeadzone ? 0f : joystickYaw;
 
-
         jetObject.transform.Rotate(Vector3.forward * CurrentJoystickRoll * rollSpeed * Time.deltaTime);
         jetObject.transform.Rotate(Vector3.right * CurrentJoystickPitch * pitchSpeed * Time.deltaTime);
         jetObject.transform.Rotate(Vector3.up * CurrentJoystickYaw * yawSpeed * Time.deltaTime);
+
+        if (!controllerIsHeld && CurrentJoystickPitch == 0f && CurrentJoystickRoll == 0f && CurrentJoystickYaw == 0f) // NEU: Stabilisiere auch Yaw, wenn Deadzone
+        {
+            AutoStabilize();
+        }
+    }
+
+    private void AutoStabilize()
+    {
+        Vector3 currentEuler = jetObject.transform.localEulerAngles;
+
+        float normalizedPitch = NormalizeAngle(currentEuler.x);
+        float normalizedRoll = NormalizeAngle(currentEuler.z);
+        float normalizedYaw = NormalizeAngle(currentEuler.y); // Neu für Yaw-Stabilisierung
+
+        // Stabilisiere Pitch (X-Achse)
+        if (Mathf.Abs(normalizedPitch) > stabilizationAngleThreshold) // NEU: Schwellenwert prüfen
+        {
+            float pitchCorrection = -normalizedPitch * stabilizationSpeed * Time.deltaTime;
+            jetObject.transform.Rotate(Vector3.right, pitchCorrection, Space.Self);
+        }
+        else if (Mathf.Abs(normalizedPitch) <= stabilizationAngleThreshold && normalizedPitch != 0f) // NEU: Setze exakt auf 0, wenn im Schwellenbereich
+        {
+            jetObject.transform.localRotation = Quaternion.Euler(0, jetObject.transform.localEulerAngles.y, jetObject.transform.localEulerAngles.z);
+        }
+
+
+        // Stabilisiere Roll (Z-Achse)
+        if (Mathf.Abs(normalizedRoll) > stabilizationAngleThreshold) // NEU: Schwellenwert prüfen
+        {
+            float rollCorrection = -normalizedRoll * stabilizationSpeed * Time.deltaTime;
+            jetObject.transform.Rotate(Vector3.forward, rollCorrection, Space.Self);
+        }
+        else if (Mathf.Abs(normalizedRoll) <= stabilizationAngleThreshold && normalizedRoll != 0f) // NEU: Setze exakt auf 0
+        {
+            jetObject.transform.localRotation = Quaternion.Euler(jetObject.transform.localEulerAngles.x, jetObject.transform.localEulerAngles.y, 0);
+        }
+
+        // Stabilisierung der Gierachse
+        if (Mathf.Abs(normalizedYaw) > stabilizationAngleThreshold && Mathf.Abs(normalizedYaw) <= maxYawStabilizationAngle) // NEU: Auch hier Schwellenwert prüfen
+        {
+            float yawCorrection = -normalizedYaw * stabilizationSpeed * Time.deltaTime * 0.5f;
+            jetObject.transform.Rotate(Vector3.up, yawCorrection, Space.Self);
+        }
+        else if (Mathf.Abs(normalizedYaw) <= stabilizationAngleThreshold && normalizedYaw != 0f && CurrentJoystickYaw == 0f) // NEU: Setze exakt auf 0, wenn im Schwellenbereich und kein Yaw-Input
+        {
+            jetObject.transform.localRotation = Quaternion.Euler(jetObject.transform.localEulerAngles.x, 0, jetObject.transform.localEulerAngles.z);
+        }
+    }
+
+    private float NormalizeAngle(float angle)
+    {
+        while (angle > 180f) angle -= 360f;
+        while (angle < -180f) angle += 360f;
+        return angle;
     }
 
     private void AdjustGlobalGravity()
@@ -231,27 +270,19 @@ public class AirplaneMovementController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Aktualisiert die Tonhöhe und Lautstärke des Triebwerkssounds basierend auf der aktuellen Geschwindigkeit.
-    /// </summary>
     private void UpdateEngineSound()
     {
         if (engineAudioSource == null || throttleMaxSpeed <= 0) return;
 
-        // Normalisiere die aktuelle Geschwindigkeit im Bereich von 0 bis 1
         float normalizedSpeed = Mathf.Clamp01(currentSpeed / throttleMaxSpeed);
 
-        // Interpoliere die Tonhöhe basierend auf der normalisierten Geschwindigkeit
         float targetPitch = Mathf.Lerp(minPitch, maxPitch, normalizedSpeed);
-        // Interpoliere die Lautstärke basierend auf der normalisierten Geschwindigkeit
         float targetVolume = Mathf.Lerp(minVolume, maxVolume, normalizedSpeed);
 
-        // Glätte die Änderungen an Pitch und Volume für einen natürlicheren Übergang
         engineAudioSource.pitch = Mathf.Lerp(engineAudioSource.pitch, targetPitch, Time.deltaTime * soundSmoothSpeed);
         engineAudioSource.volume = Mathf.Lerp(engineAudioSource.volume, targetVolume, Time.deltaTime * soundSmoothSpeed);
     }
 
-    // NEU: Öffentliche Properties, um die Rotationsgeschwindigkeiten bereitzustellen
     public float PitchSpeed => pitchSpeed;
     public float RollSpeed => rollSpeed;
     public float YawSpeed => yawSpeed;

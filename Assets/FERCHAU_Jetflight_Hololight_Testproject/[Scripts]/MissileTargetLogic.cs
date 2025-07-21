@@ -1,135 +1,88 @@
-using System.Collections;
 using UnityEngine;
+using System.Collections;
 
 public class MissileTargetLogic : MonoBehaviour
 {
     [Header("Rotation Settings")]
-    [SerializeField] private float rotationSpeed = 30f; // Rotationsgeschwindigkeit in Grad pro Sekunde
+    [SerializeField] private float rotationSpeed = 30f;
 
     [Header("Wave Movement Settings")]
-    [SerializeField] private float waveSpeed = 1f; // Geschwindigkeit der Sinusbewegung
-    [SerializeField] private float maxDisplacement = 0.5f; // Maximale Auslenkung der Bewegung
+    [SerializeField] private float waveSpeed = 1f;
+    [SerializeField] private float maxDisplacement = 0.5f;
 
-    [Header("Respawn Settings")]
-    [SerializeField] private GameObject spawnArea; // GameObject (z. B. Cube), das den Spawn-Bereich definiert
-    [SerializeField] private float respawnDelay = 2f; // Zeit bis zur erneuten Sichtbarkeit
-    [SerializeField] private float fadeDuration = 0.5f; // Dauer des Fade-Effekts in Sekunden
+    [Header("Fade Settings")]
+    [SerializeField] private float fadeDuration = 1.0f;
+    [SerializeField] private Color fadeTargetColor = new Color(1f, 1f, 1f, 0f);
 
-    private Vector3 initialPosition; // Ursprüngliche Position für die Wellenbewegung
-    private MeshRenderer meshRenderer; // Für Zugriff auf das Material
-    private Material targetMaterial; // Eigene Materialinstanz für diese Zielscheibe
-    private bool isFading = false; // Verhindert gleichzeitige Fade-Vorgänge
-    private Bounds spawnBounds; // Grenzen des Spawn-Bereichs
+    private Vector3 initialPosition;
+    private MeshRenderer meshRenderer;
+    private Material targetMaterial;
+    private bool isFading = false;
+
+    private Color initialColor;
 
     void Start()
     {
-        // Komponenten initialisieren
         meshRenderer = GetComponent<MeshRenderer>();
-
-        // Eigene Materialinstanz erstellen, um geteilte Materialien nicht zu beeinflussen
         targetMaterial = new Material(meshRenderer.material);
         meshRenderer.material = targetMaterial;
 
-        // Sicherstellen, dass das Material Transparenz unterstützt
-        SetupMaterialForTransparency();
+        SetMaterialRenderModeToFade(targetMaterial);
+
+        initialColor = targetMaterial.color;
 
         initialPosition = transform.position;
-
-        // Bounds des Spawn-Bereichs holen
-        if (spawnArea != null)
-        {
-            Renderer areaRenderer = spawnArea.GetComponent<Renderer>();
-            if (areaRenderer != null)
-            {
-                spawnBounds = areaRenderer.bounds;
-            }
-            else
-            {
-                Debug.LogError("SpawnArea hat keinen Renderer!");
-            }
-        }
-        else
-        {
-            Debug.LogError("Kein SpawnArea zugewiesen!");
-        }
     }
 
     void Update()
     {
-        // Rotation
-        transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
-
-        // Sinus-Wellenbewegung
-        float newY = initialPosition.y + Mathf.Sin(Time.time * waveSpeed) * maxDisplacement;
-        transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+        if (!isFading)
+        {
+            transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+            float newY = initialPosition.y + Mathf.Sin(Time.time * waveSpeed) * maxDisplacement;
+            transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+        }
     }
 
     void OnTriggerEnter(Collider other)
     {
-        // Prüfen, ob das kollidierende Objekt das Tag "Missile" hat und kein Fade läuft
         if (other.CompareTag("Missile") && !isFading)
         {
-            // Fade-Out starten, neue Position setzen und nach Verzögerung Fade-In
-            StartCoroutine(Fade(1f, 0f, fadeDuration, () =>
-            {
-                MoveToNewPosition();
-                Invoke(nameof(StartFadeIn), respawnDelay);
-            }));
+            FindObjectOfType<AudioManager>().Play("Target_Hit");
+            StartCoroutine(FadeOutAndDisable());
         }
     }
 
-    void StartFadeIn()
-    {
-        // Fade-In starten
-        StartCoroutine(Fade(0f, 1f, fadeDuration, null));
-    }
-
-    void SetupMaterialForTransparency()
-    {
-        // Material auf Transparent-Rendering einstellen
-        targetMaterial.SetFloat("_Mode", 2); // Fade Mode
-        targetMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        targetMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        targetMaterial.SetInt("_ZWrite", 0);
-        targetMaterial.DisableKeyword("_ALPHATEST_ON");
-        targetMaterial.EnableKeyword("_ALPHABLEND_ON");
-        targetMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        targetMaterial.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-    }
-
-    IEnumerator Fade(float startAlpha, float endAlpha, float duration, System.Action onComplete)
+    IEnumerator FadeOutAndDisable()
     {
         isFading = true;
-        float elapsed = 0f;
-        Color color = targetMaterial.color;
+        float timer = 0f;
 
-        while (elapsed < duration)
+        Color startColor = targetMaterial.color;
+
+        while (timer < fadeDuration)
         {
-            elapsed += Time.deltaTime;
-            float alpha = Mathf.Lerp(startAlpha, endAlpha, elapsed / duration);
-            targetMaterial.color = new Color(color.r, color.g, color.b, alpha);
+            targetMaterial.color = Color.Lerp(startColor, fadeTargetColor, timer / fadeDuration);
+            timer += Time.deltaTime;
             yield return null;
         }
 
-        // Sicherstellen, dass der Endwert erreicht wird
-        targetMaterial.color = new Color(color.r, color.g, color.b, endAlpha);
-        isFading = false;
+        targetMaterial.color = fadeTargetColor;
 
-        // Callback ausführen, falls vorhanden
-        onComplete?.Invoke();
+        gameObject.SetActive(false);
+
+        isFading = false;
     }
 
-    void MoveToNewPosition()
+    private void SetMaterialRenderModeToFade(Material material)
     {
-        // Zufällige Position innerhalb der Bounds des Spawn-Bereichs
-        Vector3 newPosition = new Vector3(
-            Random.Range(spawnBounds.min.x, spawnBounds.max.x),
-            Random.Range(spawnBounds.min.y, spawnBounds.max.y),
-            Random.Range(spawnBounds.min.z, spawnBounds.max.z)
-        );
-
-        // Neue Position setzen und als Basis für die Wellenbewegung verwenden
-        transform.position = newPosition;
-        initialPosition = newPosition;
+        material.SetOverrideTag("RenderType", "Transparent");
+        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        material.SetInt("_ZWrite", 0);
+        material.DisableKeyword("_ALPHATEST_ON");
+        material.EnableKeyword("_ALPHABLEND_ON");
+        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        material.renderQueue = 3000;
     }
 }

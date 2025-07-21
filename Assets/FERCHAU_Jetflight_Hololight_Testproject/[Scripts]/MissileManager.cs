@@ -50,6 +50,9 @@ public class MissileManager : MonoBehaviour
         triggerPressedButton.action.Enable();
         triggerPressedButton.action.started += TriggerWasPressed;
         triggerPressedButton.action.canceled += TriggerWasReleased;
+
+        missileLeft.tag = "Untagged";
+        missileRight.tag = "Untagged";
     }
 
 
@@ -93,12 +96,14 @@ public class MissileManager : MonoBehaviour
             missileRightAvailable = false;
             rightCollidedWithTerrain = false; // Reset collision flag
             StartCoroutine(MissileFlight(missileRight, missileMaterialRight, "right", missileParticleSystemRight));
+            missileRight.tag = "Missile"; // Set tag to Missile for collision detection
         }
         else if (missileLeftAvailable)
         {
             missileLeftAvailable = false;
             leftCollidedWithTerrain = false; // Reset collision flag
             StartCoroutine(MissileFlight(missileLeft, missileMaterialLeft, "left", missileParticleSystemLeft));
+            missileLeft.tag = "Missile"; // Set tag to Missile for collision detection
         }
         else
         {
@@ -156,6 +161,7 @@ public class MissileManager : MonoBehaviour
             missile.transform.parent = missileParentInJet;
             missileRightAvailable = true;
             rightCollidedWithTerrain = false; // Reset collision flag
+            missileRight.tag = "Untagged"; // Reset right missile tag
         }
         else if (side == "left")
         {
@@ -164,6 +170,7 @@ public class MissileManager : MonoBehaviour
             missile.transform.parent = missileParentInJet;
             missileLeftAvailable = true;
             leftCollidedWithTerrain = false; // Reset collision flag
+            missileLeft.tag = "Untagged"; // Reset left missile tag
         }
 
         // Rakete über 0.5s einfaden
