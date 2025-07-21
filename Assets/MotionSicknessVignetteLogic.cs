@@ -7,7 +7,7 @@ using UnityEngine.XR.Interaction.Toolkit.Locomotion.Comfort;
 /// This script acts as an ITunnelingVignetteProvider for the XR Interaction Toolkit's TunnelingVignetteController,
 /// allowing the controller to handle the easing in and out effects.
 /// </summary>
-public class MotionSicknessVignetteLogic : MonoBehaviour, ITunnelingVignetteProvider // <--- Implementiere das Interface!
+public class MotionSicknessVignetteLogic : MonoBehaviour, ITunnelingVignetteProvider
 {
     // NEU: Referenz zum AirplaneMovementController
     [Header("Airplane Movement References")]
@@ -85,16 +85,12 @@ public class MotionSicknessVignetteLogic : MonoBehaviour, ITunnelingVignetteProv
 
     private void Update()
     {
-        // Hole die Inputs und Geschwindigkeiten vom AirplaneMovementController
+        // Hole die Inputs vom AirplaneMovementController
         float currentJoystickPitch = airplaneMovementController.CurrentJoystickPitch;
         float currentJoystickRoll = airplaneMovementController.CurrentJoystickRoll;
         float currentJoystickYaw = airplaneMovementController.CurrentJoystickYaw;
 
         // Hole die Rotationsgeschwindigkeiten (Konstanten) vom AirplaneMovementController
-        // Die *tatsächliche* Rotationsgeschwindigkeit ist normalerweise nicht direkt verfügbar
-        // als einfacher float in diesen Scripts, da sie durch Time.deltaTime und die Rotationseinstellungen
-        // des Flugzeugs bestimmt wird. Hier verwenden wir die Einstellungs-Geschwindigkeiten
-        // als Proxy für die "potentialle" Rotationsgeschwindigkeit, die zu Motion Sickness führen könnte.
         float pitchSettingSpeed = airplaneMovementController.PitchSpeed;
         float rollSettingSpeed = airplaneMovementController.RollSpeed;
         float yawSettingSpeed = airplaneMovementController.YawSpeed;
@@ -104,35 +100,31 @@ public class MotionSicknessVignetteLogic : MonoBehaviour, ITunnelingVignetteProv
         float absRollInput = Mathf.Abs(currentJoystickRoll);
         float absYawInput = Mathf.Abs(currentJoystickYaw);
 
-        // Berechne kombinierte Rotationsstärke
-        // Jetzt verwenden wir die *Einstellungsgeschwindigkeiten* für die Gewichtung.
-        // Die Annahme ist, dass höhere Einstellungsgeschwindigkeiten auch zu einem "schlimmeren" Gefühl führen.
-        float maxSettingSpeed = Mathf.Max(pitchSettingSpeed, rollSettingSpeed, yawSettingSpeed);
-        float combinedRotationStrength = 0f;
+        // *** HIER IST DIE WESENTLICHE ÄNDERUNG ***
+        // Berechne die *gewichteteste einzelne* Rotationsstärke
+        float weightedPitchStrength = absPitchInput * pitchSettingSpeed;
+        float weightedRollStrength = absRollInput * rollSettingSpeed;
+        float weightedYawStrength = absYawInput * yawSettingSpeed;
 
-        if (maxSettingSpeed > 0.001f) // Vermeide Division durch Null
-        {
-            // Gewichtung der Inputs mit den Einstellungs-Geschwindigkeiten
-            float weightedPitchStrength = absPitchInput * (pitchSettingSpeed / maxSettingSpeed);
-            float weightedRollStrength = absRollInput * (rollSettingSpeed / maxSettingSpeed);
-            float weightedYawStrength = absYawInput * (yawSettingSpeed / maxSettingSpeed);
+        // Finde die maximale gewichtete Stärke unter allen Achsen
+        float highestWeightedStrength = Mathf.Max(weightedPitchStrength, weightedRollStrength, weightedYawStrength);
 
-            // Normiere die kombinierte Stärke auf 0-1
-            combinedRotationStrength = Mathf.Clamp01(weightedPitchStrength + weightedRollStrength + weightedYawStrength);
-        }
-        else
+        // Normalisiere die höchste gewichtete Stärke relativ zum combinedRotationStrengthThreshold
+        // um einen Wert zwischen 0 und 1 zu erhalten, der die Intensität der Vignette steuert.
+        float vignetteIntensityFactor = 0f;
+        if (combinedRotationStrengthThreshold > 0.001f) // Vermeide Division durch Null
         {
-            combinedRotationStrength = 0f;
+            vignetteIntensityFactor = Mathf.Clamp01(highestWeightedStrength / combinedRotationStrengthThreshold);
         }
 
         // Bestimme die Ziel-Aperturgröße für die XR Vignette
         float desiredApertureSize;
 
-        if (combinedRotationStrength > minInputThresholdForVignette)
+        // Die Vignette wird aktiviert, wenn der höchste gewichtete Input den Schwellenwert überschreitet
+        if (highestWeightedStrength > minInputThresholdForVignette * combinedRotationStrengthThreshold) // Hier Schwellenwert mit der Settings-Schwelle kombinieren
         {
             // Die Vignette wird stärker (Aperturgröße kleiner), wenn die Rotation zunimmt
-            float vignetteStrengthNormalized = Mathf.Clamp01(combinedRotationStrength / combinedRotationStrengthThreshold);
-            desiredApertureSize = Mathf.Lerp(VignetteParameters.Defaults.apertureSizeMax, minApertureSize, vignetteStrengthNormalized);
+            desiredApertureSize = Mathf.Lerp(VignetteParameters.Defaults.apertureSizeMax, minApertureSize, vignetteIntensityFactor);
 
             // Setze die Aperturgröße in UNSEREN VignetteParameters
             m_VignetteParameters.apertureSize = desiredApertureSize;
