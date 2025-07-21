@@ -11,11 +11,12 @@ Material:
   m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
   m_InvalidKeywords: []
   m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 1
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -47,6 +48,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _MainWave:
+        m_Texture: {fileID: 2800000, guid: c314c3578694b994f85870e700b17637, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -59,25 +64,45 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SecondWave:
+        m_Texture: {fileID: 2800000, guid: 49a2004f8369a124690bb8e4431793ef, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BGWATER_SSR: 0
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _EnviromentIntensity: 0.54
     - _GlossMapScale: 1
-    - _Glossiness: 0
+    - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _MainWaveBumpScale: 0.028
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _SmoothnessTextureChannel: 0
+    - _SSRIntensity: 0
+    - _SSRMaxSampleCount: 0
+    - _SSRSampleStep: 4
+    - _SecondWaveBumpScale: 0.401
+    - _SmoothnessTextureChannel: 1
     - _SpecularHighlights: 1
+    - _SpecularIntensity: 0
     - _SrcBlend: 1
     - _UVSec: 0
+    - _WaterDepthOffset: 1
+    - _WaterDistortScale: 0
+    - _WaterMuddyScale: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 0.5790762, g: 0.718497, b: 0.7264151, a: 1}
+    - _Color: {r: 0.17254902, g: 0.2784314, b: 0.39607847, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _MainWaveTilingOffset: {r: 1, g: 3, b: 1, a: 2}
+    - _SecondWaveTilingOffset: {r: 12, g: 12, b: -4, a: 4}
+    - _ThirdWaveTilingOffset: {r: 6, g: 6, b: -8, a: -9}
+    - _WaterBaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _WaterMuddyColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
