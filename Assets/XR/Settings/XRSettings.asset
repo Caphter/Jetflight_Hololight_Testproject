@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ace7d9adab0045941820a9c26284e4b1, type: 3}
   m_Name: XRSettings
   m_EditorClassIdentifier: 
-  RenderingMode: 0
+  RenderingMode: 1
   SignalingImplementationType: 

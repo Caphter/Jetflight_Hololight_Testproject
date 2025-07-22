@@ -3,10 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// This Unity script manages two missiles (left and right) fired via the right VR controller trigger, moving them at a set speed, exploding on collision with terrain (set by external script) or after a fixed flight time,
-/// and respawning them with fade-in/out effects. It uses coroutines to handle missile flight, explosion instantiation, and material fading, tracking availability for sequential firing.
-/// </summary>
 public class MissileManager : MonoBehaviour
 {
     [Header("Missile Settings:")]
@@ -37,28 +33,47 @@ public class MissileManager : MonoBehaviour
     private bool preventContiniousFiring = false;
     public InputActionReference triggerPressedButton;
 
+    // NEU: Konstanten für Tags
+    private const string DEFAULT_TAG = "Untagged";
+    private const string MISSILE_TAG = "Missile";
+
+    private void Awake() // Verwende Awake für die initiale Tag-Setzung
+    {
+        if (missileRight != null)
+        {
+            missileRight.tag = DEFAULT_TAG;
+        }
+        if (missileLeft != null)
+        {
+            missileLeft.tag = DEFAULT_TAG;
+        }
+    }
+
     private void Start()
     {
-        // Prüfen, ob triggerPressedButton zugewiesen ist
         if (triggerPressedButton == null)
         {
             Debug.LogError("InputActionReference für triggerPressedButton ist nicht zugewiesen!");
             return;
         }
 
-        // Input Action explizit aktivieren
         triggerPressedButton.action.Enable();
         triggerPressedButton.action.started += TriggerWasPressed;
         triggerPressedButton.action.canceled += TriggerWasReleased;
-
-        missileLeft.tag = "Untagged";
-        missileRight.tag = "Untagged";
     }
 
+    private void OnDestroy()
+    {
+        if (triggerPressedButton != null && triggerPressedButton.action != null)
+        {
+            triggerPressedButton.action.started -= TriggerWasPressed;
+            triggerPressedButton.action.canceled -= TriggerWasReleased;
+            triggerPressedButton.action.Disable();
+        }
+    }
 
     private void Update()
     {
-        // Wenn der Trigger gedrückt ist und noch nicht als gedrückt registriert wurde
         if (rightTriggerPressed && !preventContiniousFiring)
         {
             preventContiniousFiring = true;
@@ -94,16 +109,16 @@ public class MissileManager : MonoBehaviour
         if (missileRightAvailable)
         {
             missileRightAvailable = false;
-            rightCollidedWithTerrain = false; // Reset collision flag
+            rightCollidedWithTerrain = false;
             StartCoroutine(MissileFlight(missileRight, missileMaterialRight, "right", missileParticleSystemRight));
-            missileRight.tag = "Missile"; // Set tag to Missile for collision detection
+            missileRight.tag = MISSILE_TAG; // Set tag to Missile for collision detection
         }
         else if (missileLeftAvailable)
         {
             missileLeftAvailable = false;
-            leftCollidedWithTerrain = false; // Reset collision flag
+            leftCollidedWithTerrain = false;
             StartCoroutine(MissileFlight(missileLeft, missileMaterialLeft, "left", missileParticleSystemLeft));
-            missileLeft.tag = "Missile"; // Set tag to Missile for collision detection
+            missileLeft.tag = MISSILE_TAG; // Set tag to Missile for collision detection
         }
         else
         {
@@ -119,19 +134,18 @@ public class MissileManager : MonoBehaviour
 
         FindObjectOfType<AudioManager>().Play("Missile_Launch");
 
-        StartCoroutine(MoveMissile(missile, side));
-
         // Rakete fliegt für die angegebene Zeit oder bis zur Kollision
+        // Die Bewegung der Rakete ist nun direkt in dieser Coroutine enthalten
         float elapsedTime = 0f;
-        bool collided = false;
         while (elapsedTime < flightTimeTillExplosion && !(side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain))
         {
+            missile.transform.Translate(Vector3.forward * missileSpeed * Time.deltaTime); // <-- HIER IST DIE BEWEGUNG!
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
         // Check if loop exited due to collision
-        collided = (side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain);
+        bool collided = (side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain);
 
         FindObjectOfType<AudioManager>().Stop("Missile_Launch");
 
@@ -161,7 +175,7 @@ public class MissileManager : MonoBehaviour
             missile.transform.parent = missileParentInJet;
             missileRightAvailable = true;
             rightCollidedWithTerrain = false; // Reset collision flag
-            missileRight.tag = "Untagged"; // Reset right missile tag
+            missileRight.tag = DEFAULT_TAG; // Reset right missile tag
         }
         else if (side == "left")
         {
@@ -170,29 +184,21 @@ public class MissileManager : MonoBehaviour
             missile.transform.parent = missileParentInJet;
             missileLeftAvailable = true;
             leftCollidedWithTerrain = false; // Reset collision flag
-            missileLeft.tag = "Untagged"; // Reset left missile tag
+            missileLeft.tag = DEFAULT_TAG; // Reset left missile tag
         }
 
         // Rakete über 0.5s einfaden
         yield return StartCoroutine(FadeInMaterial(missileMaterial, 0.5f));
     }
 
-    private IEnumerator MoveMissile(GameObject missile, string side)
-    {
-        float flightTime = 0f;
-
-        while (flightTime < flightTimeTillExplosion && !(side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain))
-        {
-            missile.transform.Translate(Vector3.forward * missileSpeed * Time.deltaTime);
-            flightTime += Time.deltaTime;
-            yield return null;
-        }
-    }
+    // <-- DIE MOVE MISSILE METHODE WURDE ENTFERNT!
 
     private IEnumerator FadeOutMaterial(Material material, float duration)
     {
         Color color = material.color;
         float startAlpha = color.a;
+
+        SetMaterialRenderModeToFade(material); // Sicherstellen, dass der Render Mode korrekt ist
 
         for (float t = 0; t < duration; t += Time.deltaTime)
         {
@@ -210,6 +216,8 @@ public class MissileManager : MonoBehaviour
         Color color = material.color;
         float startAlpha = color.a;
 
+        SetMaterialRenderModeToFade(material); // Sicherstellen, dass der Render Mode korrekt ist
+
         for (float t = 0; t < duration; t += Time.deltaTime)
         {
             color.a = Mathf.Lerp(startAlpha, 1f, t / duration);
@@ -219,5 +227,21 @@ public class MissileManager : MonoBehaviour
 
         color.a = 1f;
         material.color = color;
+    }
+
+    // Hilfsfunktion zur Material-Konfiguration für Transparenz (falls nicht schon vorhanden)
+    private void SetMaterialRenderModeToFade(Material material)
+    {
+        if (material.renderQueue != 3000)
+        {
+            material.SetOverrideTag("RenderType", "Transparent");
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetInt("_ZWrite", 0);
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.EnableKeyword("_ALPHABLEND_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.renderQueue = 3000;
+        }
     }
 }

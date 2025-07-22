@@ -49,4 +49,12 @@ public class PlaneTerrainCollisionCheck : MonoBehaviour
             StartCoroutine(HandleCrash());
         }
     }
+
+    public void TriggerCrashExternal()
+    {
+        if (!crashTriggered)
+        {
+            StartCoroutine(HandleCrash());
+        }
+    }
 }
