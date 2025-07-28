@@ -26,9 +26,19 @@ public class EjectionSeatLogic : MonoBehaviour
     [SerializeField] private GameObject parachuteObject;
     [SerializeField] private Vector3 parachuteStartScale;
     [SerializeField] private Vector3 parachutTargetScale;
-    [SerializeField] private float parachuteDeployDuration = 1f; // New: Duration for parachute scaling
+    [SerializeField] private float parachuteDeployDuration = 1f;
     [SerializeField] private float parachuteDrag = 0.5f;
     [SerializeField] private float parachuteDelay = 2f;
+
+    [Header("Vignette During Ejection")] // Changed header to reflect only ejection
+    [SerializeField] private MotionSicknessVignetteLogic motionSicknessVignetteLogic;
+    [Tooltip("Aperture size for the strong ejection vignette (e.g., 0.1 for very strong).")]
+    [Range(0f, 1f)][SerializeField] private float ejectionVignetteAperture = 0.1f;
+    [Tooltip("Ease-in time for the strong ejection vignette.")]
+    [SerializeField] private float ejectionVignetteEaseInTime = 0.2f;
+    [Tooltip("Duration for the strong ejection vignette to last.")]
+    [SerializeField] private float ejectionVignetteDuration = 2.0f;
+
 
     [Header("References")]
     [SerializeField] private AirplaneMovementController airplaneMovementController;
@@ -41,7 +51,7 @@ public class EjectionSeatLogic : MonoBehaviour
     {
         ejectionSeatHandleStartLocalPositionRelativeToPlane = ejectionSeatHandle.transform.localPosition;
         ejectionSeatHandleStartLocalRotationRelativeToPlane = ejectionSeatHandle.transform.localRotation;
-        parachuteStartScale = parachuteObject.transform.localScale; // Ensure this is set correctly in Editor or here
+        parachuteStartScale = parachuteObject.transform.localScale;
     }
 
     private void Update()
@@ -60,6 +70,8 @@ public class EjectionSeatLogic : MonoBehaviour
             currentDistance = Vector3.Distance(ejectionSeatHandleStartLocalPositionRelativeToPlane, handleLocalPositionInPlaneSpace);
         }
 
+        Debug.Log("Current Distance: " + currentDistance);
+
         if (currentDistance > ejectionHandleDistanceThreshold && !ejectionSequenceStarted)
         {
             ejectionSequenceStarted = true;
@@ -77,6 +89,16 @@ public class EjectionSeatLogic : MonoBehaviour
         ejectionSeatHandle.SetActive(false);
 
         EjectCockpitCover();
+
+        // Trigger strong ejection vignette for a duration, then it will fade out completely
+        if (motionSicknessVignetteLogic != null)
+        {
+            motionSicknessVignetteLogic.RequestTemporaryVignette(
+                ejectionVignetteAperture,
+                ejectionVignetteEaseInTime,
+                ejectionVignetteDuration
+            );
+        }
 
 
         Invoke(nameof(EjectSeat), 0.2f);
@@ -146,6 +168,10 @@ public class EjectionSeatLogic : MonoBehaviour
 
     public void ResetScene()
     {
+        if (motionSicknessVignetteLogic != null)
+        {
+            motionSicknessVignetteLogic.ReleaseVignetteControl();
+        }
         // UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }
 
