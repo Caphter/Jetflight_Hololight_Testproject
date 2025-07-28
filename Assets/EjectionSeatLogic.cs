@@ -127,12 +127,18 @@ public class EjectionSeatLogic : MonoBehaviour
         Invoke(nameof(EjectSeat), 0.2f);
         // NEU: Ausrichtung des Sitzes beginnt nach alignDelay (vom Eject-Moment an)
         Invoke(nameof(StartAlignAndSwing), alignDelay);
+
+        // NEU: Setze Angular Drag für das Schwingen hier, damit es zum Zeitpunkt der Ausrichtung wirksam wird
+        Invoke(nameof(ApplyParachuteDrag), 0.5f);
+
         // Fallschirm-Deploy bleibt bei parachuteDelay
         Invoke(nameof(DeployParachute), parachuteDelay);
     }
 
     public void EjectCockpitCover()
     {
+        FindObjectOfType<AudioManager>().Play("Cockpit_Cover_Eject");
+
         Rigidbody coverRb = cockpitCover.GetComponent<Rigidbody>();
 
         cockpitCover.transform.SetParent(null, true);
@@ -150,6 +156,8 @@ public class EjectionSeatLogic : MonoBehaviour
 
     public void EjectSeat()
     {
+        FindObjectOfType<AudioManager>().Play("Seat_Rockets");
+
         xrRig.transform.SetParent(pilotSeatObject.transform, true);
 
         Rigidbody seatRb = pilotSeatObject.GetComponent<Rigidbody>();
@@ -176,16 +184,16 @@ public class EjectionSeatLogic : MonoBehaviour
         }
     }
 
-    public void DeployParachute()
+    void ApplyParachuteDrag(Rigidbody seatRb)
     {
-        // Der Angular Drag wird nun in StartAlignAndSwing() gesetzt, da das Schwingen früher beginnt.
-        // Hier wird nur noch der Drag für den Abstieg gesetzt, falls er unterschiedlich ist.
-        Rigidbody seatRb = pilotSeatObject.GetComponent<Rigidbody>();
         if (seatRb != null)
         {
             seatRb.drag = parachuteDrag;
         }
+    }
 
+    public void DeployParachute()
+    {
         StartCoroutine(ScaleParachuteSmoothly());
 
         Invoke(nameof(ResetScene), 20f);
@@ -193,6 +201,7 @@ public class EjectionSeatLogic : MonoBehaviour
 
     private IEnumerator ScaleParachuteSmoothly()
     {
+        FindObjectOfType<AudioManager>().Play("Parachute_Open");
         float timer = 0f;
         Vector3 currentScale = parachuteObject.transform.localScale;
 
