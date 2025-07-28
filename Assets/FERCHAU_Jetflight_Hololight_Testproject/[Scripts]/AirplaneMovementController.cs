@@ -34,6 +34,7 @@ public class AirplaneMovementController : MonoBehaviour
     [SerializeField] private float maxGlobalGravity = 9.81f;
     [SerializeField] private float minSpeedForZeroGlobalGravity = 100f;
     [SerializeField] private Rigidbody jetRigidbody;
+    [SerializeField] private EjectionSeatLogic ejectionSeatLogicScript;
 
     public GroundContactManager groundContactManagerScript;
 
@@ -259,6 +260,11 @@ public class AirplaneMovementController : MonoBehaviour
 
     private void AdjustGlobalGravity()
     {
+        if(ejectionSeatLogicScript.ejectionSequenceStarted)
+        {
+            Physics.gravity = initialGlobalGravity; 
+            return;
+        }
         if (!groundContactManagerScript.isGrounded)
         {
             float gravityMultiplier = Mathf.InverseLerp(minSpeedForZeroGlobalGravity, 0, currentSpeed);
