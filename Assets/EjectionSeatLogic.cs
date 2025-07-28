@@ -5,10 +5,11 @@ public class EjectionSeatLogic : MonoBehaviour
 {
     [Header("Ejection Handle")]
     [SerializeField] private GameObject ejectionSeatHandle;
-    private Vector3 ejectionSeatHandleStartLocalPositionRelativeToPlane; // Speichert die lokale Position relativ zum Flugzeug
+    private Vector3 ejectionSeatHandleStartLocalPositionRelativeToPlane;
+    private Quaternion ejectionSeatHandleStartLocalRotationRelativeToPlane;
     [SerializeField] private float ejectionHandleDistanceThreshold = 0.3f;
+    [SerializeField] private float handleDeactivationDelay = 0.5f;
     [SerializeField] private float handleReturnSpeed = 5f;
-
 
     [Header("Cockpit Cover")]
     [SerializeField] private GameObject cockpitCover;
@@ -22,6 +23,10 @@ public class EjectionSeatLogic : MonoBehaviour
     [SerializeField] private GameObject xrRig;
 
     [Header("Parachute")]
+    [SerializeField] private GameObject parachuteObject;
+    [SerializeField] private Vector3 parachuteStartScale;
+    [SerializeField] private Vector3 parachutTargetScale;
+    [SerializeField] private float parachuteDeployDuration = 1f; // New: Duration for parachute scaling
     [SerializeField] private float parachuteDrag = 0.5f;
     [SerializeField] private float parachuteDelay = 2f;
 
@@ -29,33 +34,31 @@ public class EjectionSeatLogic : MonoBehaviour
     [SerializeField] private AirplaneMovementController airplaneMovementController;
 
     public bool ejectionSequenceStarted = false;
-    private Coroutine returnHandleCoroutine; // To manage the smooth return
 
+    private Coroutine returnHandleCoroutine;
 
     private void Start()
     {
         ejectionSeatHandleStartLocalPositionRelativeToPlane = ejectionSeatHandle.transform.localPosition;
+        ejectionSeatHandleStartLocalRotationRelativeToPlane = ejectionSeatHandle.transform.localRotation;
+        parachuteStartScale = parachuteObject.transform.localScale; // Ensure this is set correctly in Editor or here
     }
 
     private void Update()
     {
         float currentDistance;
 
-        if (ejectionSeatHandle.transform.parent == this.transform) // Annahme: Dieses Skript ist am Flugzeug, und der Griff ist direktes Kind
+        if (ejectionSeatHandle.transform.parent == this.transform)
         {
             currentDistance = Vector3.Distance(ejectionSeatHandleStartLocalPositionRelativeToPlane, ejectionSeatHandle.transform.localPosition);
         }
-        else // Der Griff wurde entparented (z.B. von der VR-Hand gegriffen)
+        else
         {
-            // Konvertiere die aktuelle Position des Griffs in den lokalen Raum des Flugzeugs
             Vector3 handleWorldPosition = ejectionSeatHandle.transform.position;
             Vector3 handleLocalPositionInPlaneSpace = this.transform.InverseTransformPoint(handleWorldPosition);
 
-            // Vergleiche diese konvertierte Position mit der gespeicherten Startposition
             currentDistance = Vector3.Distance(ejectionSeatHandleStartLocalPositionRelativeToPlane, handleLocalPositionInPlaneSpace);
         }
-
-        Debug.Log("Current Distance: " + currentDistance);
 
         if (currentDistance > ejectionHandleDistanceThreshold && !ejectionSequenceStarted)
         {
@@ -66,6 +69,11 @@ public class EjectionSeatLogic : MonoBehaviour
 
     private void StartEjectionSequence()
     {
+        if (returnHandleCoroutine != null)
+        {
+            StopCoroutine(returnHandleCoroutine);
+        }
+
         ejectionSeatHandle.SetActive(false);
 
         EjectCockpitCover();
@@ -110,13 +118,30 @@ public class EjectionSeatLogic : MonoBehaviour
     public void DeployParachute()
     {
         Rigidbody seatRb = pilotSeatObject.GetComponent<Rigidbody>();
-        if (seatRb != null) // Dieses if (null) behalte ich bei, da es sich um eine Referenz handelt, die zur Laufzeit null werden könnte, was zu einem Fehler führen würde
+        if (seatRb != null)
         {
             seatRb.drag = parachuteDrag;
             seatRb.angularDrag = parachuteDrag;
         }
 
-        Invoke(nameof(ResetScene), 5f);
+        StartCoroutine(ScaleParachuteSmoothly());
+
+        Invoke(nameof(ResetScene), 20f);
+    }
+
+    private IEnumerator ScaleParachuteSmoothly()
+    {
+        float timer = 0f;
+        Vector3 currentScale = parachuteObject.transform.localScale;
+
+        while (timer < parachuteDeployDuration)
+        {
+            timer += Time.deltaTime;
+            parachuteObject.transform.localScale = Vector3.Lerp(currentScale, parachutTargetScale, timer / parachuteDeployDuration);
+            yield return null;
+        }
+
+        parachuteObject.transform.localScale = parachutTargetScale;
     }
 
     public void ResetScene()
@@ -128,23 +153,31 @@ public class EjectionSeatLogic : MonoBehaviour
     {
         if (!ejectionSequenceStarted)
         {
+            ejectionSeatHandle.transform.SetParent(this.transform, true);
+            if (returnHandleCoroutine != null)
+            {
+                StopCoroutine(returnHandleCoroutine);
+            }
             returnHandleCoroutine = StartCoroutine(ReturnHandleSmoothly());
         }
     }
 
     private IEnumerator ReturnHandleSmoothly()
     {
-        while (Vector3.Distance(ejectionSeatHandle.transform.localPosition, ejectionSeatHandleStartLocalPositionRelativeToPlane) > 0.001f)
+        float t = 0f;
+        Vector3 startPos = ejectionSeatHandle.transform.localPosition;
+        Quaternion startRot = ejectionSeatHandle.transform.localRotation;
+
+        while (t < 1f)
         {
-            ejectionSeatHandle.transform.localPosition = Vector3.Lerp(
-                ejectionSeatHandle.transform.localPosition,
-                ejectionSeatHandleStartLocalPositionRelativeToPlane,
-                Time.deltaTime * handleReturnSpeed
-            );
+            t += Time.deltaTime * handleReturnSpeed;
+            ejectionSeatHandle.transform.localPosition = Vector3.Lerp(startPos, ejectionSeatHandleStartLocalPositionRelativeToPlane, t);
+            ejectionSeatHandle.transform.localRotation = Quaternion.Lerp(startRot, ejectionSeatHandleStartLocalRotationRelativeToPlane, t);
             yield return null;
         }
-        // Ensure it snaps exactly to the start position at the end
+
         ejectionSeatHandle.transform.localPosition = ejectionSeatHandleStartLocalPositionRelativeToPlane;
+        ejectionSeatHandle.transform.localRotation = ejectionSeatHandleStartLocalRotationRelativeToPlane;
         returnHandleCoroutine = null;
     }
 }
