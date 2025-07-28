@@ -22,15 +22,30 @@ public class EjectionSeatLogic : MonoBehaviour
     [SerializeField] private float seatInitialDrag = 0.1f;
     [SerializeField] private GameObject xrRig;
 
+    private Quaternion airplaneEjectRotationYOnly;
+
     [Header("Parachute")]
     [SerializeField] private GameObject parachuteObject;
     [SerializeField] private Vector3 parachuteStartScale;
     [SerializeField] private Vector3 parachutTargetScale;
     [SerializeField] private float parachuteDeployDuration = 1f;
     [SerializeField] private float parachuteDrag = 0.5f;
-    [SerializeField] private float parachuteDelay = 2f;
+    [SerializeField] private float parachuteDelay = 2f; // Das ist immer noch die Verzögerung FÜR DEN FALLSCHIRM selbst
 
-    [Header("Vignette During Ejection")] // Changed header to reflect only ejection
+    [Header("Parachute Descent Physics")]
+    [Tooltip("Geschwindigkeit, mit der sich der Sitz nach dem Fallschirm-Deploy aufrichtet.")]
+    [SerializeField] private float alignSpeed = 2f;
+    [Tooltip("Stärke des Schwingeffekts.")]
+    [SerializeField] private float swingMagnitude = 5f;
+    [Tooltip("Frequenz des Schwingeffekts.")]
+    [SerializeField] private float swingFrequency = 1f;
+    [Tooltip("Dämpfung des Schwingeffekts, damit er nicht endlos schwingt.")]
+    [SerializeField] private float swingDamping = 0.5f;
+    [Tooltip("Verzögerungszeit nach dem Sitz-Auswurf, bis der Sitz beginnt, sich aufzurichten und zu schwingen.")]
+    [SerializeField] private float alignDelay = 1.0f; // NEU: Unabhängige Verzögerung für die Ausrichtung
+
+
+    [Header("Vignette During Ejection")]
     [SerializeField] private MotionSicknessVignetteLogic motionSicknessVignetteLogic;
     [Tooltip("Aperture size for the strong ejection vignette (e.g., 0.1 for very strong).")]
     [Range(0f, 1f)][SerializeField] private float ejectionVignetteAperture = 0.1f;
@@ -90,7 +105,6 @@ public class EjectionSeatLogic : MonoBehaviour
 
         EjectCockpitCover();
 
-        // Trigger strong ejection vignette for a duration, then it will fade out completely
         if (motionSicknessVignetteLogic != null)
         {
             motionSicknessVignetteLogic.RequestTemporaryVignette(
@@ -100,8 +114,20 @@ public class EjectionSeatLogic : MonoBehaviour
             );
         }
 
+        if (airplaneMovementController != null)
+        {
+            Vector3 planeForward = airplaneMovementController.transform.forward;
+            airplaneEjectRotationYOnly = Quaternion.Euler(0, Quaternion.LookRotation(new Vector3(planeForward.x, 0, planeForward.z)).eulerAngles.y, 0);
+        }
+        else
+        {
+            airplaneEjectRotationYOnly = Quaternion.identity;
+        }
 
         Invoke(nameof(EjectSeat), 0.2f);
+        // NEU: Ausrichtung des Sitzes beginnt nach alignDelay (vom Eject-Moment an)
+        Invoke(nameof(StartAlignAndSwing), alignDelay);
+        // Fallschirm-Deploy bleibt bei parachuteDelay
         Invoke(nameof(DeployParachute), parachuteDelay);
     }
 
@@ -137,13 +163,27 @@ public class EjectionSeatLogic : MonoBehaviour
         seatRb.AddForce(transform.up * seatEjectionForce, ForceMode.Impulse);
     }
 
-    public void DeployParachute()
+    // NEU: Hilfsfunktion, die von Invoke aufgerufen wird, um die Coroutine zu starten
+    private void StartAlignAndSwing()
     {
         Rigidbody seatRb = pilotSeatObject.GetComponent<Rigidbody>();
         if (seatRb != null)
         {
-            seatRb.drag = parachuteDrag;
+            // Setze Angular Drag für das Schwingen hier zurück, damit es zum Zeitpunkt der Ausrichtung wirksam wird
             seatRb.angularDrag = parachuteDrag;
+            seatRb.freezeRotation = false;
+            StartCoroutine(AlignAndSwingSeat(seatRb));
+        }
+    }
+
+    public void DeployParachute()
+    {
+        // Der Angular Drag wird nun in StartAlignAndSwing() gesetzt, da das Schwingen früher beginnt.
+        // Hier wird nur noch der Drag für den Abstieg gesetzt, falls er unterschiedlich ist.
+        Rigidbody seatRb = pilotSeatObject.GetComponent<Rigidbody>();
+        if (seatRb != null)
+        {
+            seatRb.drag = parachuteDrag;
         }
 
         StartCoroutine(ScaleParachuteSmoothly());
@@ -165,6 +205,54 @@ public class EjectionSeatLogic : MonoBehaviour
 
         parachuteObject.transform.localScale = parachutTargetScale;
     }
+
+    private IEnumerator AlignAndSwingSeat(Rigidbody seatRb)
+    {
+        // Phase 1: Sanft aufrichten
+        float alignTimer = 0f;
+        Quaternion initialCurrentRotation = pilotSeatObject.transform.rotation;
+
+        Quaternion targetRotation = Quaternion.LookRotation(airplaneEjectRotationYOnly * Vector3.forward, Vector3.up);
+
+        Debug.DrawRay(pilotSeatObject.transform.position, targetRotation * Vector3.forward * 5, Color.blue, 10f);
+        Debug.DrawRay(pilotSeatObject.transform.position, targetRotation * Vector3.up * 5, Color.green, 10f);
+
+
+        while (alignTimer < 1f)
+        {
+            alignTimer += Time.deltaTime * alignSpeed;
+            pilotSeatObject.transform.rotation = Quaternion.Slerp(initialCurrentRotation, targetRotation, alignTimer);
+            yield return null;
+        }
+        pilotSeatObject.transform.rotation = targetRotation;
+
+        // Phase 2: Leichtes Schwingen mit Dämpfung
+        float swingTimer = 0f;
+
+        while (true)
+        {
+            swingTimer += Time.deltaTime * swingFrequency;
+
+            float currentDamping = Mathf.Exp(-swingDamping * swingTimer);
+            if (currentDamping < 0.01f && swingTimer > 5f)
+            {
+                pilotSeatObject.transform.rotation = targetRotation;
+                break;
+            }
+
+            float swingPitch = Mathf.Sin(swingTimer) * swingMagnitude * currentDamping;
+            float swingRoll = Mathf.Cos(swingTimer * 0.7f) * swingMagnitude * 0.5f * currentDamping;
+
+            Quaternion swingOffset = Quaternion.Euler(swingPitch, 0f, swingRoll);
+
+            Quaternion combinedSwingRotation = targetRotation * swingOffset;
+
+            pilotSeatObject.transform.rotation = Quaternion.Slerp(pilotSeatObject.transform.rotation, combinedSwingRotation, Time.deltaTime * alignSpeed);
+
+            yield return null;
+        }
+    }
+
 
     public void ResetScene()
     {
