@@ -85,8 +85,6 @@ public class EjectionSeatLogic : MonoBehaviour
             currentDistance = Vector3.Distance(ejectionSeatHandleStartLocalPositionRelativeToPlane, handleLocalPositionInPlaneSpace);
         }
 
-        Debug.Log("Current Distance: " + currentDistance);
-
         if (currentDistance > ejectionHandleDistanceThreshold && !ejectionSequenceStarted)
         {
             ejectionSequenceStarted = true;
