@@ -452,6 +452,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "LeftTriggerPressed",
+                    "type": "Button",
+                    "id": "c65552e5-9cbf-48d6-98ac-81ea0c13ba75",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -859,6 +868,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Thumbstick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "cd5459c5-91fb-487f-a53e-178d93a86292",
+                    "path": "<XRController>{LeftHand}/{TriggerButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "LeftTriggerPressed",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -1441,6 +1461,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "RightPrimaryPressed",
+                    "type": "Button",
+                    "id": "f232848b-885d-438a-85e6-85f22a2dcfb7",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -1870,6 +1899,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "RightSecondaryPressed",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "57524fe8-4d98-46aa-9e6a-d25f985f17fa",
+                    "path": "<XRController>{RightHand}/{PrimaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RightPrimaryPressed",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
