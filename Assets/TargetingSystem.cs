@@ -3,26 +3,53 @@ using UnityEngine.InputSystem;
 
 public class TargetingSystem : MonoBehaviour
 {
+    [SerializeField] private GameObject crosshairWorldAnchor;
     [SerializeField] private GameObject hmdCrosshairParent;
-    [SerializeField] private GameObject triggerTargetingCrosshairParent;
     [SerializeField] private GameObject crosshair;
-    [SerializeField] private GameObject leftController; // Referenz auf den linken Controller
+    [SerializeField] private GameObject leftController;
 
     [SerializeField] private InputActionReference triggerLeftPressedButton;
     [SerializeField] private InputActionReference primaryRightPressedButton;
 
-    [SerializeField] private float sensitivity = 0.1f; // Sensitivität der Fadenkreuzbewegung
-    [SerializeField] private float maxVerticalAngle = 45f; // Maximaler vertikaler Winkel
-    [SerializeField] private float maxHorizontalAngle = 45f; // Maximaler horizontaler Winkel
+    [SerializeField] private float sensitivity = 0.1f;
+    [SerializeField] private float maxVerticalAngle = 45f;
+    [SerializeField] private float maxHorizontalAngle = 45f;
+    [SerializeField] private float verticalOffsetBias = -10f; // NEU: Positiver Wert verschiebt Bereich nach unten, negativer nach oben.
 
-    private bool triggerTargetingActive = false;
-    private bool targetingSystemActive = false;
-    private Vector3 initialCrosshairPosition; // Position des Fadenkreuzes beim Start
-    private Vector3 lastCrosshairPosition; // Letzte Position des Fadenkreuzes beim Trigger-Druck
-    private Quaternion initialControllerRotation;
+    public bool triggerTargetingActive = false;
+    public bool targetingSystemActive = false;
 
-    private void Start()
+    private Vector3 initialCrosshairLocalPositionHMD;
+    private Vector3 initialCrosshairLocalPositionWorldSpace;
+    private Quaternion initialControllerRotationAtPress;
+
+    private Transform mainCameraTransform;
+
+    private void Awake()
     {
+        if (hmdCrosshairParent == null || crosshair == null || leftController == null || crosshairWorldAnchor == null)
+        {
+            Debug.LogError("TargetingSystem: Eines der Haupt-GameObjects (HMD Parent, World Anchor, Crosshair, Left Controller) ist nicht zugewiesen.");
+            enabled = false;
+            return;
+        }
+        if (triggerLeftPressedButton == null || primaryRightPressedButton == null ||
+            triggerLeftPressedButton.action == null || primaryRightPressedButton.action == null)
+        {
+            Debug.LogError("TargetingSystem: Eine oder beide Input Actions sind nicht zugewiesen oder initialisiert.");
+            enabled = false;
+            return;
+        }
+
+        if (Camera.main != null)
+        {
+            mainCameraTransform = Camera.main.transform;
+        }
+        else
+        {
+            Debug.LogError("TargetingSystem: Keine Kamera mit 'MainCamera' Tag gefunden. Fadenkreuz kann sich nicht ausrichten.");
+        }
+
         triggerLeftPressedButton.action.Enable();
         triggerLeftPressedButton.action.performed += OnTriggerLeftPressed;
         triggerLeftPressedButton.action.canceled += OnTriggerLeftReleased;
@@ -30,49 +57,66 @@ public class TargetingSystem : MonoBehaviour
         primaryRightPressedButton.action.Enable();
         primaryRightPressedButton.action.performed += OnPrimaryRightPressed;
 
-        // Speichere die initiale Position des Fadenkreuzes beim Start
-        initialCrosshairPosition = crosshair.transform.localPosition;
-        lastCrosshairPosition = initialCrosshairPosition; // Setze Anfangsreferenz
+        crosshair.SetActive(false);
+        crosshair.transform.SetParent(hmdCrosshairParent.transform, false);
+        initialCrosshairLocalPositionHMD = crosshair.transform.localPosition;
     }
 
     private void OnDestroy()
     {
-        if (triggerLeftPressedButton != null)
+        if (triggerLeftPressedButton != null && triggerLeftPressedButton.action != null)
         {
             triggerLeftPressedButton.action.performed -= OnTriggerLeftPressed;
             triggerLeftPressedButton.action.canceled -= OnTriggerLeftReleased;
-
+        }
+        if (primaryRightPressedButton != null && primaryRightPressedButton.action != null)
+        {
             primaryRightPressedButton.action.performed -= OnPrimaryRightPressed;
         }
     }
 
     private void Update()
     {
-        if (targetingSystemActive && triggerTargetingActive)
+        if (!targetingSystemActive) return;
+
+        crosshair.SetActive(true);
+
+        if (triggerTargetingActive)
         {
-            // Berechne die Rotation des Controllers relativ zur Ausgangsrotation
-            Quaternion controllerRotation = leftController.transform.rotation;
-            Vector3 rotationDelta = (controllerRotation * Quaternion.Inverse(initialControllerRotation)).eulerAngles;
+            if (leftController != null && mainCameraTransform != null)
+            {
+                Quaternion deltaControllerRotation = leftController.transform.rotation * Quaternion.Inverse(initialControllerRotationAtPress);
 
-            // Normalisiere die Euler-Winkel (0 bis 360 -> -180 bis 180)
-            float deltaX = NormalizeAngle(rotationDelta.x); // X-Rotation (Neigung)
-            float deltaY = NormalizeAngle(rotationDelta.y); // Y-Rotation (Drehung)
+                Quaternion transformedDeltaRotation = Quaternion.Inverse(mainCameraTransform.rotation) * deltaControllerRotation * mainCameraTransform.rotation;
+                Vector3 eulerDelta = transformedDeltaRotation.eulerAngles;
 
-            // Berechne die neue Position des Fadenkreuzes
-            Vector3 newCrosshairPosition = lastCrosshairPosition;
-            newCrosshairPosition.y += deltaX * sensitivity; // Vertikale Bewegung basierend auf X-Rotation
-            newCrosshairPosition.x += deltaY * sensitivity; // Horizontale Bewegung basierend auf Y-Rotation (invertiert)
+                float deltaPitch = -NormalizeAngle(eulerDelta.x) * sensitivity;
+                float deltaYaw = NormalizeAngle(eulerDelta.y) * sensitivity;
 
-            // Begrenze die Bewegung des Fadenkreuzes
-            newCrosshairPosition.y = Mathf.Clamp(newCrosshairPosition.y,
-                lastCrosshairPosition.y - maxVerticalAngle * sensitivity,
-                lastCrosshairPosition.y + maxVerticalAngle * sensitivity);
-            newCrosshairPosition.x = Mathf.Clamp(newCrosshairPosition.x,
-                lastCrosshairPosition.x - maxHorizontalAngle * sensitivity,
-                lastCrosshairPosition.x + maxHorizontalAngle * sensitivity);
+                Vector3 newLocalPosition = initialCrosshairLocalPositionWorldSpace;
+                newLocalPosition.y += deltaPitch;
+                newLocalPosition.x += deltaYaw;
 
-            // Setze die neue Position des Fadenkreuzes
-            crosshair.transform.localPosition = newCrosshairPosition;
+                // Anpassung der vertikalen Grenzwerte
+                newLocalPosition.y = Mathf.Clamp(newLocalPosition.y,
+                                                 initialCrosshairLocalPositionWorldSpace.y - maxVerticalAngle + verticalOffsetBias, // Unterer Grenzwert verschoben
+                                                 initialCrosshairLocalPositionWorldSpace.y + maxVerticalAngle + verticalOffsetBias); // Oberer Grenzwert verschoben
+                newLocalPosition.x = Mathf.Clamp(newLocalPosition.x,
+                                                 initialCrosshairLocalPositionWorldSpace.x - maxHorizontalAngle,
+                                                 initialCrosshairLocalPositionWorldSpace.x + maxHorizontalAngle);
+
+                crosshair.transform.localPosition = newLocalPosition;
+            }
+        }
+        else
+        {
+            crosshair.transform.localPosition = initialCrosshairLocalPositionHMD;
+        }
+
+        if (mainCameraTransform != null)
+        {
+            crosshair.transform.LookAt(mainCameraTransform.position);
+            crosshair.transform.Rotate(0, 180, 0, Space.Self);
         }
     }
 
@@ -81,11 +125,14 @@ public class TargetingSystem : MonoBehaviour
         if (targetingSystemActive)
         {
             triggerTargetingActive = true;
-            crosshair.transform.parent = triggerTargetingCrosshairParent.transform;
-            // Speichere die aktuelle Position des Fadenkreuzes als Referenz
-            lastCrosshairPosition = crosshair.transform.localPosition;
-            // Speichere die aktuelle Controller-Rotation als Referenz
-            initialControllerRotation = leftController.transform.rotation;
+
+            if (leftController != null)
+            {
+                initialControllerRotationAtPress = leftController.transform.rotation;
+
+                crosshair.transform.SetParent(crosshairWorldAnchor.transform, worldPositionStays: true);
+                initialCrosshairLocalPositionWorldSpace = crosshair.transform.localPosition;
+            }
         }
     }
 
@@ -94,37 +141,39 @@ public class TargetingSystem : MonoBehaviour
         if (targetingSystemActive)
         {
             triggerTargetingActive = false;
-            crosshair.transform.parent = hmdCrosshairParent.transform;
-            // Setze die Position des Fadenkreuzes auf die initiale Position zurück
-            crosshair.transform.localPosition = initialCrosshairPosition;
-            lastCrosshairPosition = initialCrosshairPosition; // Aktualisiere Referenz für nächsten Trigger-Druck
+
+            if (hmdCrosshairParent != null)
+            {
+                crosshair.transform.SetParent(hmdCrosshairParent.transform, worldPositionStays: true);
+            }
         }
     }
 
     private void OnPrimaryRightPressed(InputAction.CallbackContext context)
     {
         targetingSystemActive = !targetingSystemActive;
+        Debug.Log($"Targeting System Active: {targetingSystemActive}");
 
         if (targetingSystemActive)
         {
             crosshair.SetActive(true);
-            crosshair.transform.parent = hmdCrosshairParent.transform; // Fadenkreuz folgt HMD
-            triggerTargetingActive = false; // Stelle sicher, dass Trigger-Steuerung deaktiviert ist
-            crosshair.transform.localPosition = initialCrosshairPosition; // Setze auf initiale Position
-            lastCrosshairPosition = initialCrosshairPosition; // Aktualisiere Referenz
+            crosshair.transform.SetParent(hmdCrosshairParent.transform, false);
+            crosshair.transform.localPosition = initialCrosshairLocalPositionHMD;
+            triggerTargetingActive = false;
         }
         else
         {
             crosshair.SetActive(false);
-            triggerTargetingActive = false; // Deaktiviere Trigger-Steuerung
+            triggerTargetingActive = false;
+            crosshair.transform.SetParent(hmdCrosshairParent.transform, true);
         }
     }
 
-    // Normalisiert Euler-Winkel von 0-360 zu -180 bis 180
     private float NormalizeAngle(float angle)
     {
-        while (angle > 180f) angle -= 360f;
-        while (angle < -180f) angle += 360f;
+        angle %= 360f;
+        if (angle > 180f) return angle - 360f;
+        if (angle < -180f) return angle + 360f;
         return angle;
     }
 }

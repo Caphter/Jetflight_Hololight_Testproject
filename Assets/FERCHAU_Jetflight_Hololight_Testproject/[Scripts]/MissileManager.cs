@@ -111,14 +111,14 @@ public class MissileManager : MonoBehaviour
             missileRightAvailable = false;
             rightCollidedWithTerrain = false;
             StartCoroutine(MissileFlight(missileRight, missileMaterialRight, "right", missileParticleSystemRight));
-            missileRight.tag = MISSILE_TAG; // Set tag to Missile for collision detection
+            missileRight.tag = MISSILE_TAG; 
         }
         else if (missileLeftAvailable)
         {
             missileLeftAvailable = false;
             leftCollidedWithTerrain = false;
             StartCoroutine(MissileFlight(missileLeft, missileMaterialLeft, "left", missileParticleSystemLeft));
-            missileLeft.tag = MISSILE_TAG; // Set tag to Missile for collision detection
+            missileLeft.tag = MISSILE_TAG; 
         }
         else
         {
@@ -128,7 +128,6 @@ public class MissileManager : MonoBehaviour
 
     private IEnumerator MissileFlight(GameObject missile, Material missileMaterial, string side, ParticleSystem missileParticleSystem)
     {
-        // Rakete aus der Jet-Hierarchie lösen und starten
         missile.transform.parent = null;
         missileParticleSystem.Play();
 
@@ -144,19 +143,15 @@ public class MissileManager : MonoBehaviour
             yield return null;
         }
 
-        // Check if loop exited due to collision
         bool collided = (side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain);
 
         FindObjectOfType<AudioManager>().Stop("Missile_Launch");
 
-        // Stop particle system
         missileParticleSystem.Stop();
 
-        // Explosion instanziieren
         Vector3 explosionPosition = side == "right" ? explosionReferencePointRight.position : explosionReferencePointLeft.position;
         if (collided)
         {
-            // Use missile's current position for explosion on collision
             explosionPosition = missile.transform.position;
         }
 
@@ -164,7 +159,6 @@ public class MissileManager : MonoBehaviour
         FindObjectOfType<AudioManager>().Play("Missile_Explosion");
         Destroy(obj, 1.5f);
 
-        // Rakete über 0.25s ausfaden
         yield return StartCoroutine(FadeOutMaterial(missileMaterial, 0.25f));
 
         // Rakete zurück an den Respawn-Punkt setzen
