@@ -8,13 +8,18 @@ public class MissileManager : MonoBehaviour
     [Header("Missile Settings:")]
     [SerializeField] private List<GameObject> explosionPrefabs;
     [SerializeField] private Transform missileParentInJet;
-    [SerializeField] private float flightTimeTillExplosion = 6f; // Angepasst auf 6 Sekunden
+    [SerializeField] private float flightTimeTillExplosion = 6f;
     [SerializeField] private float missileSpeed = 10f;
     [SerializeField] private float straightFlightDuration = 0.5f;
     [SerializeField] private float turnRate = 5f;
     [SerializeField] private float crosshairTargetDistance = 100f;
+    [SerializeField] private Transform alternativeTargetPoint;
 
-    // Listen für alle 4 Raketen
+    // NEU: Hitmarker-GameObject und Deaktivierungszeit
+    [Header("UI Feedback")]
+    [SerializeField] private GameObject hitmarkerGameObject;
+    [SerializeField] private float hitmarkerDuration = 1.0f;
+
     [Header("Missiles")]
     [SerializeField] private List<GameObject> allMissiles = new List<GameObject>(4);
     [SerializeField] private List<Transform> missileRespawnPoints = new List<Transform>(4);
@@ -25,6 +30,7 @@ public class MissileManager : MonoBehaviour
     private bool preventContiniousFiring = false;
     public InputActionReference triggerPressedButton;
 
+    [SerializeField] private CrosshairTargetColliderCheck crosshairTargetColliderCheck;
     [SerializeField] private TargetingSystem targetingSystem;
     [SerializeField] private Transform crosshairTransform;
 
@@ -34,7 +40,6 @@ public class MissileManager : MonoBehaviour
     private const string DEFAULT_TAG = "Untagged";
     private const string MISSILE_TAG = "Missile";
 
-    // Listen für den Verfügbarkeits- und Kollisionsstatus
     private List<bool> missileAvailable = new List<bool> { true, true, true, true };
     private List<bool> missileCollidedWithTerrain = new List<bool> { false, false, false, false };
 
@@ -66,6 +71,24 @@ public class MissileManager : MonoBehaviour
             Debug.LogError("MissileManager: CrosshairTransform-Referenz ist nicht zugewiesen!");
             enabled = false;
             return;
+        }
+        if (alternativeTargetPoint == null)
+        {
+            Debug.LogError("MissileManager: AlternativeTargetPoint-Referenz ist nicht zugewiesen!");
+            enabled = false;
+            return;
+        }
+        if (crosshairTargetColliderCheck == null)
+        {
+            Debug.LogError("MissileManager: CrosshairTargetColliderCheck-Referenz ist nicht zugewiesen!");
+            enabled = false;
+            return;
+        }
+
+        // NEU: Deaktiviere den Hitmarker beim Start, falls er im Editor aktiv ist
+        if (hitmarkerGameObject != null)
+        {
+            hitmarkerGameObject.SetActive(false);
         }
     }
 
@@ -106,6 +129,8 @@ public class MissileManager : MonoBehaviour
         if (missileIndex >= 0 && missileIndex < missileCollidedWithTerrain.Count)
         {
             missileCollidedWithTerrain[missileIndex] = true;
+
+            ShowHitmarker();
         }
     }
 
@@ -130,7 +155,7 @@ public class MissileManager : MonoBehaviour
                 missileCollidedWithTerrain[i] = false;
                 StartCoroutine(MissileFlight(i));
                 allMissiles[i].tag = MISSILE_TAG;
-                return; // Beendet die Methode nach dem Abfeuern einer Rakete
+                return;
             }
         }
     }
@@ -157,7 +182,7 @@ public class MissileManager : MonoBehaviour
             }
             else
             {
-                targetPosition = crosshairTransform.position + crosshairTransform.forward * crosshairTargetDistance;
+                targetPosition = alternativeTargetPoint.position;
             }
         }
 
@@ -187,8 +212,15 @@ public class MissileManager : MonoBehaviour
             yield return null;
         }
 
+        bool collided = missileCollidedWithTerrain[missileIndex];
+
         FindObjectOfType<AudioManager>()?.Stop("Missile_Launch");
         missileParticleSystem.Stop();
+
+        if (collided && crosshairTargetColliderCheck != null)
+        {
+            crosshairTargetColliderCheck.ResetCrosshairStatus();
+        }
 
         Vector3 explosionPosition = missile.transform.position;
 
@@ -209,6 +241,25 @@ public class MissileManager : MonoBehaviour
         yield return StartCoroutine(FadeInMaterial(missileMaterial, 0.5f));
     }
 
+    // NEU: Methode zum Aktivieren des Hitmarkers
+    private void ShowHitmarker()
+    {
+        if (hitmarkerGameObject != null)
+        {
+            // Starte eine Koroutine, die den Hitmarker aktiviert und nach der festgelegten Zeit deaktiviert
+            StartCoroutine(HitmarkerCoroutine());
+        }
+    }
+
+    // NEU: Koroutine für den Hitmarker
+    private IEnumerator HitmarkerCoroutine()
+    {
+        hitmarkerGameObject.SetActive(true);
+        yield return new WaitForSeconds(hitmarkerDuration);
+        hitmarkerGameObject.SetActive(false);
+    }
+
+    // ... (deine restlichen Methoden) ...
     private IEnumerator FadeOutMaterial(Material material, float duration)
     {
         Color color = material.color;

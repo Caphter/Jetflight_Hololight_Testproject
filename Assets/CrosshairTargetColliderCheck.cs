@@ -7,7 +7,6 @@ public class CrosshairTargetColliderCheck : MonoBehaviour
     [SerializeField] private Color targetInCrosshairColor;
     [SerializeField] private Color defaultCrosshairColor;
 
-
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Target"))
@@ -22,9 +21,17 @@ public class CrosshairTargetColliderCheck : MonoBehaviour
     {
         if (other.CompareTag("Target"))
         {
+            FindObjectOfType<AudioManager>()?.Play("Target_Locked");
             missileManagerScript.targetLocked = false;
             missileManagerScript.currentTarget = null;
             crosshairSpriteRenderer.color = defaultCrosshairColor;
         }
+    }
+
+    public void ResetCrosshairStatus()
+    {
+        missileManagerScript.targetLocked = false;
+        missileManagerScript.currentTarget = null;
+        crosshairSpriteRenderer.color = defaultCrosshairColor;
     }
 }
