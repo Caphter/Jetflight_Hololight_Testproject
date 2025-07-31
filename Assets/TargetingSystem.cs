@@ -179,6 +179,8 @@ public class TargetingSystem : MonoBehaviour
     {
         if (targetTransform != null)
         {
+            FindObjectOfType<AudioManager>()?.Play("Target_Locked");
+
             isTargetLocked = true;
             lockedTargetTransform = targetTransform;
             targetLockTimer = targetLockDuration;
