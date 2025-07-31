@@ -76,7 +76,7 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _EnviromentIntensity: 0.54
-    - _GlossMapScale: 0.933
+    - _GlossMapScale: 0.143
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _MainWaveBumpScale: 0.028
@@ -98,7 +98,7 @@ Material:
     - _WaterMuddyScale: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 0.103150584, g: 0.22410114, b: 0.3584906, a: 1}
+    - _Color: {r: 0.051619805, g: 0.19211422, b: 0.3773585, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _MainWaveTilingOffset: {r: 1, g: 3, b: 1, a: 2}
     - _SecondWaveTilingOffset: {r: 12, g: 12, b: -4, a: 4}
