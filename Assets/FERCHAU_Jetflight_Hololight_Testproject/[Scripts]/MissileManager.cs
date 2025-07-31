@@ -8,44 +8,64 @@ public class MissileManager : MonoBehaviour
     [Header("Missile Settings:")]
     [SerializeField] private List<GameObject> explosionPrefabs;
     [SerializeField] private Transform missileParentInJet;
-    [SerializeField] private float flightTimeTillExplosion = 3f;
+    [SerializeField] private float flightTimeTillExplosion = 6f; // Angepasst auf 6 Sekunden
     [SerializeField] private float missileSpeed = 10f;
+    [SerializeField] private float straightFlightDuration = 0.5f;
+    [SerializeField] private float turnRate = 5f;
+    [SerializeField] private float crosshairTargetDistance = 100f;
 
-    [Header("Missile Right:")]
-    [SerializeField] private GameObject missileRight;
-    [SerializeField] private Transform explosionReferencePointRight;
-    [SerializeField] private Transform missileRespawnPointRight;
-    [SerializeField] private Material missileMaterialRight;
-    [SerializeField] private ParticleSystem missileParticleSystemRight;
-    [SerializeField] private bool missileRightAvailable = true;
-    public bool rightCollidedWithTerrain = false;
-
-    [Header("Missile Left:")]
-    [SerializeField] private GameObject missileLeft;
-    [SerializeField] private Transform explosionReferencePointLeft;
-    [SerializeField] private Transform missileRespawnPointLeft;
-    [SerializeField] private Material missileMaterialLeft;
-    [SerializeField] private ParticleSystem missileParticleSystemLeft;
-    [SerializeField] private bool missileLeftAvailable = true;
-    public bool leftCollidedWithTerrain = false;
+    // Listen für alle 4 Raketen
+    [Header("Missiles")]
+    [SerializeField] private List<GameObject> allMissiles = new List<GameObject>(4);
+    [SerializeField] private List<Transform> missileRespawnPoints = new List<Transform>(4);
+    [SerializeField] private List<Material> missileMaterials = new List<Material>(4);
+    [SerializeField] private List<ParticleSystem> missileParticleSystems = new List<ParticleSystem>(4);
 
     private bool rightTriggerPressed = false;
     private bool preventContiniousFiring = false;
     public InputActionReference triggerPressedButton;
 
-    // NEU: Konstanten für Tags
+    [SerializeField] private TargetingSystem targetingSystem;
+    [SerializeField] private Transform crosshairTransform;
+
+    public bool targetLocked = false;
+    public Transform currentTarget;
+
     private const string DEFAULT_TAG = "Untagged";
     private const string MISSILE_TAG = "Missile";
 
-    private void Awake() // Verwende Awake für die initiale Tag-Setzung
+    // Listen für den Verfügbarkeits- und Kollisionsstatus
+    private List<bool> missileAvailable = new List<bool> { true, true, true, true };
+    private List<bool> missileCollidedWithTerrain = new List<bool> { false, false, false, false };
+
+    private void Awake()
     {
-        if (missileRight != null)
+        if (allMissiles.Count != 4 || missileRespawnPoints.Count != 4 || missileMaterials.Count != 4 || missileParticleSystems.Count != 4)
         {
-            missileRight.tag = DEFAULT_TAG;
+            Debug.LogError("MissileManager: Die Listen für die Raketen müssen genau 4 Elemente enthalten!");
+            enabled = false;
+            return;
         }
-        if (missileLeft != null)
+
+        foreach (GameObject missile in allMissiles)
         {
-            missileLeft.tag = DEFAULT_TAG;
+            if (missile != null)
+            {
+                missile.tag = DEFAULT_TAG;
+            }
+        }
+
+        if (targetingSystem == null)
+        {
+            Debug.LogError("MissileManager: TargetingSystem-Referenz ist nicht zugewiesen!");
+            enabled = false;
+            return;
+        }
+        if (crosshairTransform == null)
+        {
+            Debug.LogError("MissileManager: CrosshairTransform-Referenz ist nicht zugewiesen!");
+            enabled = false;
+            return;
         }
     }
 
@@ -81,15 +101,11 @@ public class MissileManager : MonoBehaviour
         }
     }
 
-    public void CollidedWithTerrain(string side)
+    public void CollidedWithTerrain(int missileIndex)
     {
-        if (side == "right")
+        if (missileIndex >= 0 && missileIndex < missileCollidedWithTerrain.Count)
         {
-            rightCollidedWithTerrain = true;
-        }
-        else if (side == "left")
-        {
-            leftCollidedWithTerrain = true;
+            missileCollidedWithTerrain[missileIndex] = true;
         }
     }
 
@@ -106,93 +122,99 @@ public class MissileManager : MonoBehaviour
 
     public void FireMissile()
     {
-        if (missileRightAvailable)
+        for (int i = 0; i < allMissiles.Count; i++)
         {
-            missileRightAvailable = false;
-            rightCollidedWithTerrain = false;
-            StartCoroutine(MissileFlight(missileRight, missileMaterialRight, "right", missileParticleSystemRight));
-            missileRight.tag = MISSILE_TAG; 
-        }
-        else if (missileLeftAvailable)
-        {
-            missileLeftAvailable = false;
-            leftCollidedWithTerrain = false;
-            StartCoroutine(MissileFlight(missileLeft, missileMaterialLeft, "left", missileParticleSystemLeft));
-            missileLeft.tag = MISSILE_TAG; 
-        }
-        else
-        {
-            return;
+            if (missileAvailable[i])
+            {
+                missileAvailable[i] = false;
+                missileCollidedWithTerrain[i] = false;
+                StartCoroutine(MissileFlight(i));
+                allMissiles[i].tag = MISSILE_TAG;
+                return; // Beendet die Methode nach dem Abfeuern einer Rakete
+            }
         }
     }
 
-    private IEnumerator MissileFlight(GameObject missile, Material missileMaterial, string side, ParticleSystem missileParticleSystem)
+    private IEnumerator MissileFlight(int missileIndex)
     {
+        GameObject missile = allMissiles[missileIndex];
+        Material missileMaterial = missileMaterials[missileIndex];
+        ParticleSystem missileParticleSystem = missileParticleSystems[missileIndex];
+        Transform missileRespawnPoint = missileRespawnPoints[missileIndex];
+
         missile.transform.parent = null;
         missileParticleSystem.Play();
 
-        FindObjectOfType<AudioManager>().Play("Missile_Launch");
+        FindObjectOfType<AudioManager>()?.Play("Missile_Launch");
 
-        // Rakete fliegt für die angegebene Zeit oder bis zur Kollision
-        // Die Bewegung der Rakete ist nun direkt in dieser Coroutine enthalten
-        float elapsedTime = 0f;
-        while (elapsedTime < flightTimeTillExplosion && !(side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain))
+        Vector3 targetPosition = Vector3.zero;
+
+        if (targetingSystem.targetingSystemActive)
         {
-            missile.transform.Translate(Vector3.forward * missileSpeed * Time.deltaTime); // <-- HIER IST DIE BEWEGUNG!
+            if (targetLocked && currentTarget != null)
+            {
+                targetPosition = currentTarget.position;
+            }
+            else
+            {
+                targetPosition = crosshairTransform.position + crosshairTransform.forward * crosshairTargetDistance;
+            }
+        }
+
+        float elapsedTime = 0f;
+        while (elapsedTime < flightTimeTillExplosion && !missileCollidedWithTerrain[missileIndex])
+        {
+            if (targetingSystem.targetingSystemActive)
+            {
+                if (elapsedTime < straightFlightDuration)
+                {
+                    missile.transform.Translate(Vector3.forward * missileSpeed * Time.deltaTime, Space.Self);
+                }
+                else
+                {
+                    Vector3 directionToTarget = (targetPosition - missile.transform.position).normalized;
+                    Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
+                    missile.transform.rotation = Quaternion.RotateTowards(missile.transform.rotation, targetRotation, turnRate * Time.deltaTime);
+                    missile.transform.Translate(Vector3.forward * missileSpeed * Time.deltaTime, Space.Self);
+                }
+            }
+            else
+            {
+                missile.transform.Translate(Vector3.forward * missileSpeed * Time.deltaTime, Space.Self);
+            }
+
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        bool collided = (side == "right" ? rightCollidedWithTerrain : leftCollidedWithTerrain);
-
-        FindObjectOfType<AudioManager>().Stop("Missile_Launch");
-
+        FindObjectOfType<AudioManager>()?.Stop("Missile_Launch");
         missileParticleSystem.Stop();
 
-        Vector3 explosionPosition = side == "right" ? explosionReferencePointRight.position : explosionReferencePointLeft.position;
-        if (collided)
-        {
-            explosionPosition = missile.transform.position;
-        }
+        Vector3 explosionPosition = missile.transform.position;
 
         GameObject obj = Instantiate(explosionPrefabs[Random.Range(0, explosionPrefabs.Count)], explosionPosition, Quaternion.identity);
-        FindObjectOfType<AudioManager>().Play("Missile_Explosion");
+        FindObjectOfType<AudioManager>()?.Play("Missile_Explosion");
         Destroy(obj, 1.5f);
 
         yield return StartCoroutine(FadeOutMaterial(missileMaterial, 0.25f));
 
-        // Rakete zurück an den Respawn-Punkt setzen
-        if (side == "right")
-        {
-            missile.transform.position = missileRespawnPointRight.position;
-            missile.transform.rotation = missileRespawnPointRight.rotation;
-            missile.transform.parent = missileParentInJet;
-            missileRightAvailable = true;
-            rightCollidedWithTerrain = false; // Reset collision flag
-            missileRight.tag = DEFAULT_TAG; // Reset right missile tag
-        }
-        else if (side == "left")
-        {
-            missile.transform.position = missileRespawnPointLeft.position;
-            missile.transform.rotation = missileRespawnPointLeft.rotation;
-            missile.transform.parent = missileParentInJet;
-            missileLeftAvailable = true;
-            leftCollidedWithTerrain = false; // Reset collision flag
-            missileLeft.tag = DEFAULT_TAG; // Reset left missile tag
-        }
+        missile.transform.position = missileRespawnPoint.position;
+        missile.transform.rotation = missileRespawnPoint.rotation;
+        missile.transform.parent = missileParentInJet;
 
-        // Rakete über 0.5s einfaden
+        missileAvailable[missileIndex] = true;
+        missileCollidedWithTerrain[missileIndex] = false;
+        missile.tag = DEFAULT_TAG;
+
         yield return StartCoroutine(FadeInMaterial(missileMaterial, 0.5f));
     }
-
-    // <-- DIE MOVE MISSILE METHODE WURDE ENTFERNT!
 
     private IEnumerator FadeOutMaterial(Material material, float duration)
     {
         Color color = material.color;
         float startAlpha = color.a;
 
-        SetMaterialRenderModeToFade(material); // Sicherstellen, dass der Render Mode korrekt ist
+        SetMaterialRenderModeToFade(material);
 
         for (float t = 0; t < duration; t += Time.deltaTime)
         {
@@ -210,7 +232,7 @@ public class MissileManager : MonoBehaviour
         Color color = material.color;
         float startAlpha = color.a;
 
-        SetMaterialRenderModeToFade(material); // Sicherstellen, dass der Render Mode korrekt ist
+        SetMaterialRenderModeToFade(material);
 
         for (float t = 0; t < duration; t += Time.deltaTime)
         {
@@ -223,7 +245,6 @@ public class MissileManager : MonoBehaviour
         material.color = color;
     }
 
-    // Hilfsfunktion zur Material-Konfiguration für Transparenz (falls nicht schon vorhanden)
     private void SetMaterialRenderModeToFade(Material material)
     {
         if (material.renderQueue != 3000)

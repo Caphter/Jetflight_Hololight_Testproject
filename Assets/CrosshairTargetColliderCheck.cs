@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class CrosshairTargetColliderCheck : MonoBehaviour
 {
-    public bool targetInCrosshair = false;
+    [SerializeField] private MissileManager missileManagerScript;
     [SerializeField] private SpriteRenderer crosshairSpriteRenderer;
     [SerializeField] private Color targetInCrosshairColor;
     [SerializeField] private Color defaultCrosshairColor;
@@ -12,7 +12,8 @@ public class CrosshairTargetColliderCheck : MonoBehaviour
     {
         if (other.CompareTag("Target"))
         {
-            targetInCrosshair = true;
+            missileManagerScript.targetLocked = true;
+            missileManagerScript.currentTarget = other.transform;
             crosshairSpriteRenderer.color = targetInCrosshairColor;
         }
     }
@@ -21,7 +22,8 @@ public class CrosshairTargetColliderCheck : MonoBehaviour
     {
         if (other.CompareTag("Target"))
         {
-            targetInCrosshair = false;
+            missileManagerScript.targetLocked = false;
+            missileManagerScript.currentTarget = null;
             crosshairSpriteRenderer.color = defaultCrosshairColor;
         }
     }
