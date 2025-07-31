@@ -2,36 +2,25 @@ using UnityEngine;
 
 public class CrosshairTargetColliderCheck : MonoBehaviour
 {
-    [SerializeField] private MissileManager missileManagerScript;
-    [SerializeField] private SpriteRenderer crosshairSpriteRenderer;
-    [SerializeField] private Color targetInCrosshairColor;
-    [SerializeField] private Color defaultCrosshairColor;
+    // Die Referenz auf dein normales Fadenkreuz
+    [SerializeField] private SpriteRenderer normalCrosshairSpriteRenderer;
+    [SerializeField] private TargetingSystem targetingSystemScript;
+
+
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Target"))
-        {
-            missileManagerScript.targetLocked = true;
-            missileManagerScript.currentTarget = other.transform;
-            crosshairSpriteRenderer.color = targetInCrosshairColor;
+        {            
+            targetingSystemScript.SetTargetLock(other.transform);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Target"))
-        {
-            FindObjectOfType<AudioManager>()?.Play("Target_Locked");
-            missileManagerScript.targetLocked = false;
-            missileManagerScript.currentTarget = null;
-            crosshairSpriteRenderer.color = defaultCrosshairColor;
+        {            
+            targetingSystemScript.ReleaseTargetLock();
         }
-    }
-
-    public void ResetCrosshairStatus()
-    {
-        missileManagerScript.targetLocked = false;
-        missileManagerScript.currentTarget = null;
-        crosshairSpriteRenderer.color = defaultCrosshairColor;
     }
 }

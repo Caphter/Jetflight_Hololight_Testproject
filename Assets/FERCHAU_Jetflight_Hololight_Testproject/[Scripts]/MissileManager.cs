@@ -15,7 +15,6 @@ public class MissileManager : MonoBehaviour
     [SerializeField] private float crosshairTargetDistance = 100f;
     [SerializeField] private Transform alternativeTargetPoint;
 
-    // NEU: Hitmarker-GameObject und Deaktivierungszeit
     [Header("UI Feedback")]
     [SerializeField] private GameObject hitmarkerGameObject;
     [SerializeField] private float hitmarkerDuration = 1.0f;
@@ -30,12 +29,9 @@ public class MissileManager : MonoBehaviour
     private bool preventContiniousFiring = false;
     public InputActionReference triggerPressedButton;
 
-    [SerializeField] private CrosshairTargetColliderCheck crosshairTargetColliderCheck;
     [SerializeField] private TargetingSystem targetingSystem;
+    [SerializeField] private CrosshairTargetColliderCheck crosshairTargetColliderCheck;
     [SerializeField] private Transform crosshairTransform;
-
-    public bool targetLocked = false;
-    public Transform currentTarget;
 
     private const string DEFAULT_TAG = "Untagged";
     private const string MISSILE_TAG = "Missile";
@@ -78,14 +74,6 @@ public class MissileManager : MonoBehaviour
             enabled = false;
             return;
         }
-        if (crosshairTargetColliderCheck == null)
-        {
-            Debug.LogError("MissileManager: CrosshairTargetColliderCheck-Referenz ist nicht zugewiesen!");
-            enabled = false;
-            return;
-        }
-
-        // NEU: Deaktiviere den Hitmarker beim Start, falls er im Editor aktiv ist
         if (hitmarkerGameObject != null)
         {
             hitmarkerGameObject.SetActive(false);
@@ -129,7 +117,6 @@ public class MissileManager : MonoBehaviour
         if (missileIndex >= 0 && missileIndex < missileCollidedWithTerrain.Count)
         {
             missileCollidedWithTerrain[missileIndex] = true;
-
             ShowHitmarker();
         }
     }
@@ -176,9 +163,9 @@ public class MissileManager : MonoBehaviour
 
         if (targetingSystem.targetingSystemActive)
         {
-            if (targetLocked && currentTarget != null)
+            if (targetingSystem.isTargetLocked)
             {
-                targetPosition = currentTarget.position;
+                targetPosition = targetingSystem.GetLockedTargetPosition();
             }
             else
             {
@@ -217,9 +204,9 @@ public class MissileManager : MonoBehaviour
         FindObjectOfType<AudioManager>()?.Stop("Missile_Launch");
         missileParticleSystem.Stop();
 
-        if (collided && crosshairTargetColliderCheck != null)
+        if (collided)
         {
-            crosshairTargetColliderCheck.ResetCrosshairStatus();
+            targetingSystem.ReleaseTargetLock();
         }
 
         Vector3 explosionPosition = missile.transform.position;
@@ -241,25 +228,6 @@ public class MissileManager : MonoBehaviour
         yield return StartCoroutine(FadeInMaterial(missileMaterial, 0.5f));
     }
 
-    // NEU: Methode zum Aktivieren des Hitmarkers
-    private void ShowHitmarker()
-    {
-        if (hitmarkerGameObject != null)
-        {
-            // Starte eine Koroutine, die den Hitmarker aktiviert und nach der festgelegten Zeit deaktiviert
-            StartCoroutine(HitmarkerCoroutine());
-        }
-    }
-
-    // NEU: Koroutine für den Hitmarker
-    private IEnumerator HitmarkerCoroutine()
-    {
-        hitmarkerGameObject.SetActive(true);
-        yield return new WaitForSeconds(hitmarkerDuration);
-        hitmarkerGameObject.SetActive(false);
-    }
-
-    // ... (deine restlichen Methoden) ...
     private IEnumerator FadeOutMaterial(Material material, float duration)
     {
         Color color = material.color;
@@ -309,5 +277,20 @@ public class MissileManager : MonoBehaviour
             material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
             material.renderQueue = 3000;
         }
+    }
+
+    private void ShowHitmarker()
+    {
+        if (hitmarkerGameObject != null)
+        {
+            StartCoroutine(HitmarkerCoroutine());
+        }
+    }
+
+    private IEnumerator HitmarkerCoroutine()
+    {
+        hitmarkerGameObject.SetActive(true);
+        yield return new WaitForSeconds(hitmarkerDuration);
+        hitmarkerGameObject.SetActive(false);
     }
 }
