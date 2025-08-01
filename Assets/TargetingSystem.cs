@@ -3,25 +3,24 @@ using UnityEngine.InputSystem;
 
 public class TargetingSystem : MonoBehaviour
 {
+    [Header("UI Objects:")]
     [SerializeField] private GameObject crosshairWorldAnchor;
     [SerializeField] private GameObject hmdCrosshairParent;
-
-    // Das normale Fadenkreuz, das sich mit dem Spieler bewegt
     [SerializeField] private GameObject normalCrosshair;
-    // Das Fadenkreuz, das sich an ein Ziel klebt
     [SerializeField] private GameObject lockedCrosshair;
 
+    [Header("Controller & Input:")]
     [SerializeField] private GameObject leftController;
-
     [SerializeField] private InputActionReference triggerLeftPressedButton;
     [SerializeField] private InputActionReference primaryRightPressedButton;
 
+    [Header("Crosshair Movement:")]
     [SerializeField] private float sensitivity = 0.1f;
     [SerializeField] private float maxVerticalAngle = 45f;
     [SerializeField] private float maxHorizontalAngle = 45f;
     [SerializeField] private float verticalOffsetBias = -10f;
 
-    [Header("Target Lock")]
+    [Header("Target Lock:")]
     [SerializeField] private float targetLockDuration = 3f;
     [SerializeField] private float crosshairDistance = 50f;
 
@@ -92,31 +91,34 @@ public class TargetingSystem : MonoBehaviour
 
     private void Update()
     {
-        if (!targetingSystemActive) return;
+        // KORRIGIERTER BEREICH: Zentrale Logik zum Ein-/Ausschalten
+        if (!targetingSystemActive)
+        {
+            normalCrosshair.SetActive(false);
+            lockedCrosshair.SetActive(false);
+            return;
+        }
 
+        // Der Rest der Logik wird nur ausgeführt, wenn das System aktiv ist
         if (isTargetLocked)
         {
-            // Lock-Logik für das zweite Fadenkreuz
             normalCrosshair.SetActive(false);
             lockedCrosshair.SetActive(true);
             HandleTargetLock();
         }
         else if (triggerTargetingActive)
         {
-            // Controller-basierte Logik für das normale Fadenkreuz
             normalCrosshair.SetActive(true);
             lockedCrosshair.SetActive(false);
             HandleControllerBasedTargeting();
         }
         else
         {
-            // Standardposition, wenn kein Zielen aktiv ist
             normalCrosshair.SetActive(true);
             lockedCrosshair.SetActive(false);
             normalCrosshair.transform.localPosition = initialCrosshairLocalPositionHMD;
         }
 
-        // Beide Fadenkreuze schauen immer zum Spieler, damit sie "flach" erscheinen
         if (mainCameraTransform != null)
         {
             normalCrosshair.transform.LookAt(mainCameraTransform.position);
@@ -142,11 +144,11 @@ public class TargetingSystem : MonoBehaviour
             newLocalPosition.x += deltaYaw;
 
             newLocalPosition.y = Mathf.Clamp(newLocalPosition.y,
-                                            initialCrosshairLocalPositionWorldSpace.y - maxVerticalAngle + verticalOffsetBias,
-                                            initialCrosshairLocalPositionWorldSpace.y + maxVerticalAngle + verticalOffsetBias);
+                                             initialCrosshairLocalPositionWorldSpace.y - maxVerticalAngle + verticalOffsetBias,
+                                             initialCrosshairLocalPositionWorldSpace.y + maxVerticalAngle + verticalOffsetBias);
             newLocalPosition.x = Mathf.Clamp(newLocalPosition.x,
-                                            initialCrosshairLocalPositionWorldSpace.x - maxHorizontalAngle,
-                                            initialCrosshairLocalPositionWorldSpace.x + maxHorizontalAngle);
+                                             initialCrosshairLocalPositionWorldSpace.x - maxHorizontalAngle,
+                                             initialCrosshairLocalPositionWorldSpace.x + maxHorizontalAngle);
 
             normalCrosshair.transform.localPosition = newLocalPosition;
         }
@@ -159,7 +161,6 @@ public class TargetingSystem : MonoBehaviour
             Vector3 directionToTarget = (lockedTargetTransform.position - mainCameraTransform.position).normalized;
             lockedCrosshair.transform.position = mainCameraTransform.position + directionToTarget * crosshairDistance;
 
-            // Der Timer wird jetzt unabhängig von der Kollision heruntergezählt
             targetLockTimer -= Time.deltaTime;
 
             if (targetLockTimer <= 0)
@@ -169,12 +170,10 @@ public class TargetingSystem : MonoBehaviour
         }
         else
         {
-            // Target wurde zerstört, Lock sofort lösen
             ReleaseTargetLock();
         }
     }
 
-    // Setzt den Lock-Zustand und startet das zweite Fadenkreuz
     public void SetTargetLock(Transform targetTransform)
     {
         if (targetTransform != null)
@@ -185,28 +184,21 @@ public class TargetingSystem : MonoBehaviour
             lockedTargetTransform = targetTransform;
             targetLockTimer = targetLockDuration;
 
-            // WICHTIG: Das Lock-Fadenkreuz wird in der Szene freigegeben
-            // Es darf keinen Parent haben, um Jitter zu verhindern
             lockedCrosshair.transform.SetParent(null);
         }
     }
 
-    // Hebt den Lock-Zustand auf und aktiviert das normale Fadenkreuz wieder
     public void ReleaseTargetLock()
     {
         isTargetLocked = false;
         lockedTargetTransform = null;
         targetLockTimer = 0;
 
-        // Fadenkreuze wechseln ihren Zustand
         normalCrosshair.SetActive(true);
         lockedCrosshair.SetActive(false);
 
-        // Optional: Das Lock-Fadenkreuz wieder unter den HMD-Parent setzen für eine saubere Hierarchie
         lockedCrosshair.transform.SetParent(hmdCrosshairParent.transform, false);
     }
-
-    // ... (restliche Methoden bleiben unverändert) ...
 
     private void OnTriggerLeftPressed(InputAction.CallbackContext context)
     {
@@ -243,24 +235,11 @@ public class TargetingSystem : MonoBehaviour
     private void OnPrimaryRightPressed(InputAction.CallbackContext context)
     {
         targetingSystemActive = !targetingSystemActive;
-        Debug.Log($"Targeting System Active: {targetingSystemActive}");
-
+        // Die Logik für das Ein- und Ausschalten der Fadenkreuze wurde in die Update-Methode verschoben,
+        // um Konflikte zu vermeiden und den Status konsistent zu halten.
         if (targetingSystemActive)
         {
-            normalCrosshair.SetActive(true);
-            normalCrosshair.transform.SetParent(hmdCrosshairParent.transform, false);
-            normalCrosshair.transform.localPosition = initialCrosshairLocalPositionHMD;
-            lockedCrosshair.SetActive(false);
-            triggerTargetingActive = false;
             ReleaseTargetLock();
-        }
-        else
-        {
-            normalCrosshair.SetActive(false);
-            lockedCrosshair.SetActive(false);
-            triggerTargetingActive = false;
-            ReleaseTargetLock();
-            normalCrosshair.transform.SetParent(hmdCrosshairParent.transform, true);
         }
     }
 
@@ -274,8 +253,6 @@ public class TargetingSystem : MonoBehaviour
 
     public Vector3 GetLockedTargetPosition()
     {
-        // Gibt die Position des gelockten Ziels zurück, wenn es existiert.
-        // Ansonsten gib eine Standardposition zurück (z.B. Vector3.zero oder null).
         if (lockedTargetTransform != null)
         {
             return lockedTargetTransform.position;
