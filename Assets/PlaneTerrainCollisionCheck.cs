@@ -28,6 +28,7 @@ public class PlaneTerrainCollisionCheck : MonoBehaviour
             engineSound.Stop();
 
             GameObject currentExplosion = Instantiate(crashExplosion, crashExplosionSpawnPoint.position, crashExplosionSpawnPoint.rotation);
+            currentExplosion.transform.parent = crashExplosionSpawnPoint;
             Destroy(currentExplosion, 1.5f);
         }
 

@@ -3599,9 +3599,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 175719312}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.83161163, z: 0, w: 0.55535764}
+  m_LocalRotation: {x: 0, y: -0.59370905, z: 0, w: 0.8046798}
   m_LocalPosition: {x: -1582.6641, y: 0, z: -1942.9585}
-  m_LocalScale: {x: 0.7992679, y: 0.7992679, z: 0.7992679}
+  m_LocalScale: {x: 1.153699, y: 1.153699, z: 1.153699}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1997444839}
@@ -3736,8 +3736,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3357.8833, y: -108.245766, z: -1074.3789}
-    m_Extent: {x: 4215.7407, y: 108.245766, z: 4215.7393}
+    m_Center: {x: 664.53735, y: -108.12056, z: -770.2246}
+    m_Extent: {x: 4210.8633, y: 108.12056, z: 4210.862}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -4396,8 +4396,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3357.883, y: -184.31421, z: -1074.3787}
-    m_Extent: {x: 4215.7407, y: 32.17732, z: 4215.7393}
+    m_Center: {x: 664.5374, y: -184.10103, z: -770.22473}
+    m_Extent: {x: 4210.8633, y: 32.1401, z: 4210.862}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -4699,8 +4699,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3106.8604, y: -184.31421, z: -988.2252}
-    m_Extent: {x: 3824.8643, y: 11.96752, z: 3824.8706}
+    m_Center: {x: 515.01276, y: -184.10103, z: -989.1182}
+    m_Extent: {x: 3820.439, y: 11.953678, z: 3820.4453}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -8779,6 +8779,11 @@ MonoBehaviour:
   range: {x: 0, y: 0}
   useConstant: 0
   size: {x: 2048, y: 1000, z: 2048}
+--- !u!4 &507613996 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1122228313406038743, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
+  m_PrefabInstance: {fileID: 704668172}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &507797474
 GameObject:
   m_ObjectHideFlags: 0
@@ -10017,12 +10022,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 584382775}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -0.0955, z: 0.239}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 0.051121168, y: 0.000000029802315, z: -0.000000041443844, w: 0.99869245}
+  m_LocalPosition: {x: -0.014921622, y: -0.7898903, z: -0.7868903}
+  m_LocalScale: {x: 10.899875, y: 4.1735644, z: 17.52272}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1379682329}
+  m_Father: {fileID: 507613996}
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!1001 &615871722
 PrefabInstance:
@@ -11986,6 +11991,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1890482090059762508, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       insertIndex: -1
       addedObject: {fileID: 529484925}
+    - targetCorrespondingSourceObject: {fileID: 1122228313406038743, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 584382776}
     - targetCorrespondingSourceObject: {fileID: 7465495972082307959, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1838400783}
@@ -19012,6 +19020,68 @@ Texture2D:
     offset: 0
     size: 0
     path: 
+--- !u!1 &1181289237
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1181289239}
+  - component: {fileID: 1181289238}
+  m_Layer: 0
+  m_Name: TODO
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1181289238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1181289237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 948c6eac03994cd49bad23b71ceeec7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  title: TODO
+  textList:
+  - s: Licht/Schatten anpassen --> Flimmern reduzieren
+    state: 0
+    show: 1
+    deleteQuestion: 0
+  - s: Instrumente sehen nicht gut aus + Flimmern
+    state: 0
+    show: 1
+    deleteQuestion: 0
+  - s: Spacial Audio auf Raketen und Flugzeugexplosion
+    state: 0
+    show: 1
+    deleteQuestion: 0
+  - s: Explosion nicht an richtiger Stelle
+    state: 3
+    show: 1
+    deleteQuestion: 0
+--- !u!4 &1181289239
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1181289237}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.90377045, y: 556.08527, z: 139.59306}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1189857767
 GameObject:
   m_ObjectHideFlags: 0
@@ -21890,8 +21960,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3357.8833, y: -108.245766, z: -1074.3789}
-    m_Extent: {x: 4215.7407, y: 108.245766, z: 4215.7393}
+    m_Center: {x: 664.53735, y: -108.12056, z: -770.2246}
+    m_Extent: {x: 4210.8633, y: 108.12056, z: 4210.862}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -22429,8 +22499,7 @@ Transform:
   m_LocalPosition: {x: -0, y: 2.86, z: 0.98}
   m_LocalScale: {x: 10.899875, y: 17.522717, z: 4.1735635}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 584382776}
+  m_Children: []
   m_Father: {fileID: 704668187}
   m_LocalEulerAnglesHint: {x: 95.86099, y: 0, z: 0}
 --- !u!54 &1379682330
@@ -25041,8 +25110,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3357.8833, y: -184.31421, z: -1074.3789}
-    m_Extent: {x: 4215.7407, y: 32.177322, z: 4215.7393}
+    m_Center: {x: 664.53735, y: -184.10103, z: -770.2246}
+    m_Extent: {x: 4210.8633, y: 32.14009, z: 4210.862}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -37531,3 +37600,4 @@ SceneRoots:
   - {fileID: 2022315601}
   - {fileID: 110826106}
   - {fileID: 204866985}
+  - {fileID: 1181289239}
