@@ -33,13 +33,11 @@ public class PlaneTerrainCollisionCheck : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
 
-        screenFaderVRScript.StartFadeToBlack();
+        screenFaderVRScript.StartFadeToBlack(1f, true);
 
         yield return new WaitForSeconds(screenFaderVRScript.defaultFadeOutDuration);
 
         yield return new WaitForSeconds(1f);
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     private void OnTriggerEnter(Collider other)

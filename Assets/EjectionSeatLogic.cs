@@ -53,6 +53,8 @@ public class EjectionSeatLogic : MonoBehaviour
     [SerializeField] private float ejectionVignetteEaseInTime = 0.2f;
     [Tooltip("Duration for the strong ejection vignette to last.")]
     [SerializeField] private float ejectionVignetteDuration = 2.0f;
+    [SerializeField] private ScreenFaderVR screenFaderVRScript;
+    [SerializeField] private float maxFlightDurationUntilReset = 15f;
 
 
     [Header("Audio Settings")]
@@ -149,6 +151,8 @@ public class EjectionSeatLogic : MonoBehaviour
 
         // Fallschirm-Deploy bleibt bei parachuteDelay
         Invoke(nameof(DeployParachute), parachuteDelay);
+
+        Invoke(nameof(ResetScene), maxFlightDurationUntilReset);
     }
 
     public void EjectCockpitCover()
@@ -281,11 +285,7 @@ public class EjectionSeatLogic : MonoBehaviour
 
     public void ResetScene()
     {
-        if (motionSicknessVignetteLogic != null)
-        {
-            motionSicknessVignetteLogic.ReleaseVignetteControl();
-        }
-        // UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        screenFaderVRScript.StartFadeToBlack(3f, true);
     }
 
     public void HandleReleased()

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ScreenFaderVR : MonoBehaviour
 {
@@ -21,7 +22,7 @@ public class ScreenFaderVR : MonoBehaviour
         }
     }
 
-    public IEnumerator FadeToBlack(float duration = -1f)
+    public IEnumerator FadeToBlack(float duration = -1f, bool shouldRestartScene = false)
     {
         if (transitionSphereRenderer == null)
         {
@@ -50,6 +51,11 @@ public class ScreenFaderVR : MonoBehaviour
         transitionSphereRenderer.material.color = targetColor;
 
         inBlendingProcess = false;
+
+        if (shouldRestartScene)
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 
     public IEnumerator FadeFromBlack(float duration = -1f)
@@ -83,9 +89,9 @@ public class ScreenFaderVR : MonoBehaviour
         inBlendingProcess = false;
     }
 
-    public void StartFadeToBlack(float duration = -1f)
+    public void StartFadeToBlack(float duration = -1f, bool shouldRestartScene = false)
     {
-        StartCoroutine(FadeToBlack(duration));
+        StartCoroutine(FadeToBlack(duration, shouldRestartScene));
     }
 
     public void StartFadeFromBlack(float duration = -1f)
