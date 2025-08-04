@@ -98,7 +98,8 @@
 		// final
 		half3 finalColor = lerp(refraction.rgb, reflection, refraction.a);
 
-		return half4(finalColor, 1);
+		// Korrigierter Rückgabewert
+		return half4(finalColor, refraction.a);
 	}
 
 #endif

@@ -123,9 +123,13 @@
 
 		half viewMultiplier = (worldViewDirY + _WaterMuddyScale) * _WaterDepthOffset * _WaterDepthOffset;
 		depth *= viewMultiplier;
-
-		half alpha = saturate(1 - depth);
-		alpha = saturate(1.02 - pow(alpha, (dot(lightingData.worldNormal.xyz, worldViewDir) * 5 + 6)));
+	
+		// Korrigierte Alpha-Berechnung
+		half waterDepth = depth * viewMultiplier;
+		half alpha = saturate(1.0 - exp(-waterDepth * 2)); // Je tiefer, desto undurchsichtiger (alpha nimmt zu)
+		alpha = saturate(1.0 - pow(alpha, (dot(lightingData.worldNormal.xyz, worldViewDir) * 5 + 6)));
+		//half alpha = saturate(1 - depth);
+		//alpha = saturate(1.02 - pow(alpha, (dot(lightingData.worldNormal.xyz, worldViewDir) * 5 + 6)));
 
 		half4 refraction = tex2D(_BGWater_GrabTexture, grabUV);
 		refraction.rgb = lerp(refraction.rgb, refraction.rgb * _WaterMuddyColor * _WaterMuddyScale, alpha);

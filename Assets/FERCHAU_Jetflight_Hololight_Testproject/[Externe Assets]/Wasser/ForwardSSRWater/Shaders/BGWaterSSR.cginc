@@ -118,7 +118,7 @@
 			half ssrWeight = saturate(1 - dot(screenUV, screenUV));
 
 			half NoV = lightingData.NoV * 2.5;
-			ssrWeight *= (1 - NoV * NoV);
+			//ssrWeight *= (1 - NoV * NoV);
 		#endif
 
 		if (ssrWeight > 0.005)

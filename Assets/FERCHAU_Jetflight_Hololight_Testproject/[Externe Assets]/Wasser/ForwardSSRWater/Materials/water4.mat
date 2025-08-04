@@ -79,7 +79,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _MainWaveBumpScale: 0.028
+    - _MainWaveBumpScale: 0.213
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
@@ -89,7 +89,7 @@ Material:
     - _SSRMaxSampleCount: 0
     - _SSRMaxSampleDistance: 12
     - _SSRSampleStep: 4
-    - _SecondWaveBumpScale: 0.401
+    - _SecondWaveBumpScale: 0.256
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SpecularIntensity: 1.98
@@ -104,9 +104,9 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _MainWaveTilingOffset: {r: 1, g: 3, b: 1, a: 2}
-    - _SecondWaveTilingOffset: {r: 12, g: 12, b: -4, a: 4}
-    - _ThirdWaveTilingOffset: {r: 6, g: 6, b: -8, a: -9}
+    - _MainWaveTilingOffset: {r: 100, g: 100, b: -1, a: 1}
+    - _SecondWaveTilingOffset: {r: 100, g: 100, b: -1, a: 2}
+    - _ThirdWaveTilingOffset: {r: 100, g: 100, b: -1, a: -2}
     - _WaterBaseColor: {r: 0.13333334, g: 0.23712425, b: 0.36862746, a: 1}
     - _WaterMuddyColor: {r: 0.4009434, g: 1, b: 0.9031962, a: 1}
   m_BuildTextureStacks: []

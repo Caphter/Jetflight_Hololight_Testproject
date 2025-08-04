@@ -55,6 +55,12 @@ public class EjectionSeatLogic : MonoBehaviour
     [SerializeField] private float ejectionVignetteDuration = 2.0f;
 
 
+    [Header("Audio Settings")]
+    [SerializeField] private AudioSource engineAudioSource;
+    [SerializeField] private float volumeBoostFactor = 1.5f;
+    private float originalEngineVolume;
+
+
     [Header("References")]
     [SerializeField] private AirplaneMovementController airplaneMovementController;
 
@@ -67,6 +73,12 @@ public class EjectionSeatLogic : MonoBehaviour
         ejectionSeatHandleStartLocalPositionRelativeToPlane = ejectionSeatHandle.transform.localPosition;
         ejectionSeatHandleStartLocalRotationRelativeToPlane = ejectionSeatHandle.transform.localRotation;
         parachuteStartScale = parachuteObject.transform.localScale;
+
+        // NEU: Ursprüngliche Lautstärke der AudioSource speichern
+        if (engineAudioSource != null)
+        {
+            originalEngineVolume = engineAudioSource.volume;
+        }
     }
 
     private void Update()
@@ -102,6 +114,12 @@ public class EjectionSeatLogic : MonoBehaviour
         ejectionSeatHandle.SetActive(false);
 
         EjectCockpitCover();
+
+        // NEU: Lautstärke des Triebwerkssounds erhöhen
+        if (engineAudioSource != null)
+        {
+            engineAudioSource.volume = originalEngineVolume * volumeBoostFactor;
+        }
 
         if (motionSicknessVignetteLogic != null)
         {
