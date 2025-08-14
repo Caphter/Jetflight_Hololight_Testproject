@@ -1,6 +1,21 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+// Enum für die verschiedenen Targeting-Modi
+public enum TargetingMode
+{
+    NoTargeting,
+    Crosshair,
+    Locked
+}
+
+// Datenstruktur für die Rückgabe
+public struct TargetingData
+{
+    public TargetingMode mode;
+    public Vector3 targetPosition;
+}
+
 public class TargetingSystem : MonoBehaviour
 {
     [Header("UI Objects:")]
@@ -24,6 +39,11 @@ public class TargetingSystem : MonoBehaviour
     [SerializeField] private float targetLockDuration = 3f;
     [SerializeField] private float crosshairDistance = 50f;
 
+    // NEU: Referenzen für die Kollisionspunkte zurück in dieses Skript
+    [Header("Target Point Sources:")]
+    [SerializeField] private CrosshairTargetColliderCheck crosshairTargetColliderCheck;
+    [SerializeField] private NoTargetingCollisionCheck noTargetingCollisionCheck;
+
     public bool isTargetLocked = false;
     private Transform lockedTargetTransform;
     private float targetLockTimer = 0f;
@@ -39,28 +59,7 @@ public class TargetingSystem : MonoBehaviour
 
     private void Awake()
     {
-        if (hmdCrosshairParent == null || normalCrosshair == null || lockedCrosshair == null || leftController == null || crosshairWorldAnchor == null)
-        {
-            Debug.LogError("TargetingSystem: Eines der Haupt-GameObjects ist nicht zugewiesen.");
-            enabled = false;
-            return;
-        }
-        if (triggerLeftPressedButton == null || primaryRightPressedButton == null ||
-            triggerLeftPressedButton.action == null || primaryRightPressedButton.action == null)
-        {
-            Debug.LogError("TargetingSystem: Eine oder beide Input Actions sind nicht zugewiesen oder initialisiert.");
-            enabled = false;
-            return;
-        }
-
-        if (Camera.main != null)
-        {
-            mainCameraTransform = Camera.main.transform;
-        }
-        else
-        {
-            Debug.LogError("TargetingSystem: Keine Kamera mit 'MainCamera' Tag gefunden.");
-        }
+        mainCameraTransform = Camera.main.transform;
 
         triggerLeftPressedButton.action.Enable();
         triggerLeftPressedButton.action.performed += OnTriggerLeftPressed;
@@ -69,7 +68,6 @@ public class TargetingSystem : MonoBehaviour
         primaryRightPressedButton.action.Enable();
         primaryRightPressedButton.action.performed += OnPrimaryRightPressed;
 
-        // Beim Start sind beide Fadenkreuze unsichtbar
         normalCrosshair.SetActive(false);
         lockedCrosshair.SetActive(false);
         normalCrosshair.transform.SetParent(hmdCrosshairParent.transform, false);
@@ -78,20 +76,13 @@ public class TargetingSystem : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (triggerLeftPressedButton != null && triggerLeftPressedButton.action != null)
-        {
-            triggerLeftPressedButton.action.performed -= OnTriggerLeftPressed;
-            triggerLeftPressedButton.action.canceled -= OnTriggerLeftReleased;
-        }
-        if (primaryRightPressedButton != null && primaryRightPressedButton.action != null)
-        {
-            primaryRightPressedButton.action.performed -= OnPrimaryRightPressed;
-        }
+        triggerLeftPressedButton.action.performed -= OnTriggerLeftPressed;
+        triggerLeftPressedButton.action.canceled -= OnTriggerLeftReleased;
+        primaryRightPressedButton.action.performed -= OnPrimaryRightPressed;
     }
 
     private void Update()
     {
-        // KORRIGIERTER BEREICH: Zentrale Logik zum Ein-/Ausschalten
         if (!targetingSystemActive)
         {
             normalCrosshair.SetActive(false);
@@ -99,23 +90,19 @@ public class TargetingSystem : MonoBehaviour
             return;
         }
 
-        // Der Rest der Logik wird nur ausgeführt, wenn das System aktiv ist
+        normalCrosshair.SetActive(!isTargetLocked);
+        lockedCrosshair.SetActive(isTargetLocked);
+
         if (isTargetLocked)
         {
-            normalCrosshair.SetActive(false);
-            lockedCrosshair.SetActive(true);
             HandleTargetLock();
         }
         else if (triggerTargetingActive)
         {
-            normalCrosshair.SetActive(true);
-            lockedCrosshair.SetActive(false);
             HandleControllerBasedTargeting();
         }
         else
         {
-            normalCrosshair.SetActive(true);
-            lockedCrosshair.SetActive(false);
             normalCrosshair.transform.localPosition = initialCrosshairLocalPositionHMD;
         }
 
@@ -130,28 +117,18 @@ public class TargetingSystem : MonoBehaviour
 
     private void HandleControllerBasedTargeting()
     {
-        if (leftController != null && mainCameraTransform != null)
-        {
-            Quaternion deltaControllerRotation = leftController.transform.rotation * Quaternion.Inverse(initialControllerRotationAtPress);
-            Quaternion transformedDeltaRotation = Quaternion.Inverse(mainCameraTransform.rotation) * deltaControllerRotation * mainCameraTransform.rotation;
-            Vector3 eulerDelta = transformedDeltaRotation.eulerAngles;
+        Quaternion deltaControllerRotation = leftController.transform.rotation * Quaternion.Inverse(initialControllerRotationAtPress);
+        Quaternion transformedDeltaRotation = Quaternion.Inverse(mainCameraTransform.rotation) * deltaControllerRotation * mainCameraTransform.rotation;
+        Vector3 eulerDelta = transformedDeltaRotation.eulerAngles;
 
-            float deltaPitch = -NormalizeAngle(eulerDelta.x) * sensitivity;
-            float deltaYaw = NormalizeAngle(eulerDelta.y) * sensitivity;
+        float deltaPitch = -NormalizeAngle(eulerDelta.x) * sensitivity;
+        float deltaYaw = NormalizeAngle(eulerDelta.y) * sensitivity;
 
-            Vector3 newLocalPosition = initialCrosshairLocalPositionWorldSpace;
-            newLocalPosition.y += deltaPitch;
-            newLocalPosition.x += deltaYaw;
+        Vector3 newLocalPosition = initialCrosshairLocalPositionWorldSpace;
+        newLocalPosition.y = Mathf.Clamp(newLocalPosition.y + deltaPitch, initialCrosshairLocalPositionWorldSpace.y - maxVerticalAngle + verticalOffsetBias, initialCrosshairLocalPositionWorldSpace.y + maxVerticalAngle + verticalOffsetBias);
+        newLocalPosition.x = Mathf.Clamp(newLocalPosition.x + deltaYaw, initialCrosshairLocalPositionWorldSpace.x - maxHorizontalAngle, initialCrosshairLocalPositionWorldSpace.x + maxHorizontalAngle);
 
-            newLocalPosition.y = Mathf.Clamp(newLocalPosition.y,
-                                             initialCrosshairLocalPositionWorldSpace.y - maxVerticalAngle + verticalOffsetBias,
-                                             initialCrosshairLocalPositionWorldSpace.y + maxVerticalAngle + verticalOffsetBias);
-            newLocalPosition.x = Mathf.Clamp(newLocalPosition.x,
-                                             initialCrosshairLocalPositionWorldSpace.x - maxHorizontalAngle,
-                                             initialCrosshairLocalPositionWorldSpace.x + maxHorizontalAngle);
-
-            normalCrosshair.transform.localPosition = newLocalPosition;
-        }
+        normalCrosshair.transform.localPosition = newLocalPosition;
     }
 
     private void HandleTargetLock()
@@ -160,7 +137,6 @@ public class TargetingSystem : MonoBehaviour
         {
             Vector3 directionToTarget = (lockedTargetTransform.position - mainCameraTransform.position).normalized;
             lockedCrosshair.transform.position = mainCameraTransform.position + directionToTarget * crosshairDistance;
-
             targetLockTimer -= Time.deltaTime;
 
             if (targetLockTimer <= 0)
@@ -179,11 +155,9 @@ public class TargetingSystem : MonoBehaviour
         if (targetTransform != null)
         {
             FindObjectOfType<AudioManager>()?.Play("Target_Locked");
-
             isTargetLocked = true;
             lockedTargetTransform = targetTransform;
             targetLockTimer = targetLockDuration;
-
             lockedCrosshair.transform.SetParent(null);
         }
     }
@@ -192,11 +166,7 @@ public class TargetingSystem : MonoBehaviour
     {
         isTargetLocked = false;
         lockedTargetTransform = null;
-        targetLockTimer = 0;
-
-        normalCrosshair.SetActive(true);
         lockedCrosshair.SetActive(false);
-
         lockedCrosshair.transform.SetParent(hmdCrosshairParent.transform, false);
     }
 
@@ -205,16 +175,11 @@ public class TargetingSystem : MonoBehaviour
         if (targetingSystemActive)
         {
             triggerTargetingActive = true;
-
-            if (leftController != null)
+            initialControllerRotationAtPress = leftController.transform.rotation;
+            if (!isTargetLocked)
             {
-                initialControllerRotationAtPress = leftController.transform.rotation;
-
-                if (!isTargetLocked)
-                {
-                    normalCrosshair.transform.SetParent(crosshairWorldAnchor.transform, worldPositionStays: true);
-                    initialCrosshairLocalPositionWorldSpace = normalCrosshair.transform.localPosition;
-                }
+                normalCrosshair.transform.SetParent(crosshairWorldAnchor.transform, worldPositionStays: true);
+                initialCrosshairLocalPositionWorldSpace = normalCrosshair.transform.localPosition;
             }
         }
     }
@@ -224,8 +189,7 @@ public class TargetingSystem : MonoBehaviour
         if (targetingSystemActive)
         {
             triggerTargetingActive = false;
-
-            if (!isTargetLocked && hmdCrosshairParent != null)
+            if (!isTargetLocked)
             {
                 normalCrosshair.transform.SetParent(hmdCrosshairParent.transform, worldPositionStays: true);
             }
@@ -235,8 +199,6 @@ public class TargetingSystem : MonoBehaviour
     private void OnPrimaryRightPressed(InputAction.CallbackContext context)
     {
         targetingSystemActive = !targetingSystemActive;
-        // Die Logik für das Ein- und Ausschalten der Fadenkreuze wurde in die Update-Methode verschoben,
-        // um Konflikte zu vermeiden und den Status konsistent zu halten.
         if (targetingSystemActive)
         {
             ReleaseTargetLock();
@@ -253,10 +215,26 @@ public class TargetingSystem : MonoBehaviour
 
     public Vector3 GetLockedTargetPosition()
     {
-        if (lockedTargetTransform != null)
+        return lockedTargetTransform != null ? lockedTargetTransform.position : Vector3.zero;
+    }
+
+    // NEU: Die öffentliche Funktion, die Targeting-Informationen zurückgibt
+    public TargetingData GetTargetingData()
+    {
+        if (targetingSystemActive)
         {
-            return lockedTargetTransform.position;
+            if (isTargetLocked)
+            {
+                return new TargetingData { mode = TargetingMode.Locked, targetPosition = GetLockedTargetPosition() };
+            }
+            else
+            {
+                return new TargetingData { mode = TargetingMode.Crosshair, targetPosition = crosshairTargetColliderCheck.currentCollidingPoint.position };
+            }
         }
-        return Vector3.zero;
+        else
+        {
+            return new TargetingData { mode = TargetingMode.NoTargeting, targetPosition = noTargetingCollisionCheck.lastCollisionPoint };
+        }
     }
 }
