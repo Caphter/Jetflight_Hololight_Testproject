@@ -2,37 +2,48 @@ using UnityEngine;
 
 public class CrosshairTargetColliderCheck : MonoBehaviour
 {
-    // Die Referenz auf dein normales Fadenkreuz
-    [SerializeField] private SpriteRenderer normalCrosshairSpriteRenderer;
+    [Header("Targeting:")]
     [SerializeField] private TargetingSystem targetingSystemScript;
     [SerializeField] private Transform defaultTargetPoint;
 
-    // Die Public Variable, die den aktuellen Kollisionspunkt speichert
-    public Transform currentCollidingPoint;
+    [Header("Raycast Settings:")]
+    [SerializeField] private float sphereCastRadius = 0.5f;
+    [SerializeField] private float raycastDistance = 200f;
+    [SerializeField] private LayerMask raycastLayers; // NEU: Variable umbenannt
 
-    private void OnTriggerEnter(Collider other)
+    public Vector3 currentCollidingPoint;
+    public Transform testingSphere;
+
+    private void Start()
     {
-        if (other.CompareTag("Target"))
-        {
-            targetingSystemScript.SetTargetLock(other.transform);
-        }
+        currentCollidingPoint = defaultTargetPoint.position;
     }
 
-    private void OnTriggerExit(Collider other)
+    private void Update()
     {
-        if (other.CompareTag("Target"))
+        RaycastHit hit;
+        Vector3 rayOrigin = transform.position;
+        Vector3 rayDirection = transform.forward;
+
+        if (Physics.SphereCast(rayOrigin, sphereCastRadius, rayDirection, out hit, raycastDistance, raycastLayers))
+        {
+            currentCollidingPoint = hit.point;
+
+            if (hit.collider.CompareTag("Target"))
+            {
+                targetingSystemScript.SetTargetLock(hit.collider.transform);
+            }
+            else
+            {
+                targetingSystemScript.ReleaseTargetLock();
+            }
+        }
+        else
         {
             targetingSystemScript.ReleaseTargetLock();
-
-            currentCollidingPoint = defaultTargetPoint;
+            currentCollidingPoint = rayOrigin + rayDirection * raycastDistance;
         }
-    }
 
-    private void OnTriggerStay(Collider other)
-    {
-        if (other.CompareTag("Target"))
-        {
-            currentCollidingPoint = other.transform;
-        }
+        testingSphere.position = currentCollidingPoint;
     }
 }

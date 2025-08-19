@@ -229,12 +229,12 @@ public class TargetingSystem : MonoBehaviour
             }
             else
             {
-                return new TargetingData { mode = TargetingMode.Crosshair, targetPosition = crosshairTargetColliderCheck.currentCollidingPoint.position };
+                return new TargetingData { mode = TargetingMode.Crosshair, targetPosition = crosshairTargetColliderCheck.currentCollidingPoint };
             }
         }
         else
         {
-            return new TargetingData { mode = TargetingMode.NoTargeting, targetPosition = noTargetingCollisionCheck.lastCollisionPoint };
+            return new TargetingData { mode = TargetingMode.NoTargeting, targetPosition = noTargetingCollisionCheck.currentCollidingPoint };
         }
     }
 }
