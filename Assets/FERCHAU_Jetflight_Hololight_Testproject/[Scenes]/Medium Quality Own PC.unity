@@ -3599,9 +3599,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 175719312}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.8563354, z: 0, w: -0.5164201}
+  m_LocalRotation: {x: 0, y: 0.27632442, z: 0, w: -0.96106446}
   m_LocalPosition: {x: -1582.6641, y: 0, z: -1942.9585}
-  m_LocalScale: {x: 1.1607034, y: 1.1607034, z: 1.1607034}
+  m_LocalScale: {x: 0.9378397, y: 0.9378397, z: 0.9378397}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1997444839}
@@ -3736,8 +3736,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3198.1758, y: -109.07159, z: -605.7031}
-    m_Extent: {x: 4247.9014, y: 109.07159, z: 4247.9}
+    m_Center: {x: -1906.4053, y: -109.90291, z: -3660.1982}
+    m_Extent: {x: 4280.2793, y: 109.90291, z: 4280.2773}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -4427,8 +4427,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3198.176, y: -185.72037, z: -605.7032}
-    m_Extent: {x: 4247.9014, y: 32.422806, z: 4247.9}
+    m_Center: {x: -1906.4055, y: -187.1359, z: -3660.1985}
+    m_Extent: {x: 4280.2793, y: 32.669926, z: 4280.2773}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -4800,8 +4800,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -2932.045, y: -185.72037, z: -579.474}
-    m_Extent: {x: 3854.0425, y: 12.058822, z: 3854.0493}
+    m_Center: {x: -1982.9991, y: -187.1359, z: -3401.8547}
+    m_Extent: {x: 3883.4177, y: 12.150732, z: 3883.4246}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -10556,7 +10556,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 637545192}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -22257,8 +22257,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3198.1758, y: -109.07159, z: -605.7031}
-    m_Extent: {x: 4247.9014, y: 109.07159, z: 4247.9}
+    m_Center: {x: -1906.4053, y: -109.90291, z: -3660.1982}
+    m_Extent: {x: 4280.2793, y: 109.90291, z: 4280.2773}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -25407,8 +25407,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -3198.1758, y: -185.72037, z: -605.7031}
-    m_Extent: {x: 4247.9014, y: 32.422806, z: 4247.9}
+    m_Center: {x: -1906.4053, y: -187.1359, z: -3660.1982}
+    m_Extent: {x: 4280.2793, y: 32.66992, z: 4280.2773}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -34694,7 +34694,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2110064744}
   - component: {fileID: 2110064746}
-  - component: {fileID: 2110064747}
   m_Layer: 0
   m_Name: Cylinder Crosshair
   m_TagString: Untagged
@@ -34738,24 +34737,6 @@ MonoBehaviour:
     m_Bits: 12304
   currentCollidingPoint: {x: 0, y: 0, z: 0}
   testingSphere: {fileID: 637545196}
---- !u!114 &2110064747
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2110064743}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 268c5202b0a148346aadbc914c8b650b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  raycastLength: 5000
-  hitLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  noHitColor: {r: 0, g: 1, b: 0, a: 1}
-  hitColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &2115073463
 GameObject:
   m_ObjectHideFlags: 0

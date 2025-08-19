@@ -127,18 +127,18 @@ public class MissileManager : MonoBehaviour
 
         TargetingData targetingData = targetingSystem.GetTargetingData();
 
-        // NEU: Einmalige Rotation der Rakete in Richtung des Zielpunktes
-        // Dies stellt sicher, dass die Rakete gerade auf den Punkt zufliegt
-        if (targetingData.mode != TargetingMode.Locked)
-        {
-            Vector3 directionToTarget = (targetingData.targetPosition - missile.transform.position).normalized;
-            missile.transform.rotation = Quaternion.LookRotation(directionToTarget);
-        }
+        // Diese Logik wird entfernt, da die Rakete nicht mehr sofort gedreht werden soll
+        // if (targetingData.mode != TargetingMode.Locked)
+        // {
+        //     Vector3 directionToTarget = (targetingData.targetPosition - missile.transform.position).normalized;
+        //     missile.transform.rotation = Quaternion.LookRotation(directionToTarget);
+        // }
 
         float elapsedTime = 0f;
         while (elapsedTime < flightTimeTillExplosion && !missileCollidedWithTerrain[missileIndex])
         {
-            if (targetingData.mode == TargetingMode.Locked && elapsedTime >= straightFlightDuration)
+            // NEUE BEDEDINGUNG: Das Homing wird jetzt auch bei TargetingMode.Crosshair aktiv!
+            if ((targetingData.mode == TargetingMode.Locked || targetingData.mode == TargetingMode.Crosshair) && elapsedTime >= straightFlightDuration)
             {
                 float distanceToTarget = Vector3.Distance(missile.transform.position, targetingData.targetPosition);
                 if (distanceToTarget > stopSteeringDistance)
