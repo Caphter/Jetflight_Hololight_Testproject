@@ -12,7 +12,6 @@ public class CrosshairTargetColliderCheck : MonoBehaviour
     [SerializeField] private LayerMask raycastLayers; // NEU: Variable umbenannt
 
     public Vector3 currentCollidingPoint;
-    public Transform testingSphere;
 
     private void Start()
     {
@@ -43,7 +42,5 @@ public class CrosshairTargetColliderCheck : MonoBehaviour
             targetingSystemScript.ReleaseTargetLock();
             currentCollidingPoint = rayOrigin + rayDirection * raycastDistance;
         }
-
-        testingSphere.position = currentCollidingPoint;
     }
 }
