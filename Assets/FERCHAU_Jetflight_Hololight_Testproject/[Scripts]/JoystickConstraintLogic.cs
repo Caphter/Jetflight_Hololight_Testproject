@@ -1,11 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-/// <summary>
-/// This Unity script controls a VR joystick’s rotation based on the right controller’s position, constraining it within maximum X and Z angles, and smoothly returns it to its initial rotation when released. 
-/// It uses Oculus input for grab detection, toggles the controller mesh visibility, and calculates rotation from positional offset with scaling and circular limits.
-/// </summary>
-
 public class JoystickConstraintLogic : MonoBehaviour
 {
     [SerializeField] private GameObject joystickObject;
@@ -18,27 +13,27 @@ public class JoystickConstraintLogic : MonoBehaviour
     private Coroutine returnToCenterRoutine;
     private Quaternion joystickInitialRotation;
 
-    [SerializeField] private float maxXRotation = 30f; // Maximale Rotation auf der X-Achse
-    [SerializeField] private float maxZRotation = 30f; // Maximale Rotation auf der Z-Achse
-    [SerializeField] private float xRotationScaling = 2f; // Skalierung der X-Rotationsstärke
-    [SerializeField] private float zRotationScaling = 2f; // Skalierung der Z-Rotationsstärke
+    [SerializeField] private float maxXRotation = 30f;
+    [SerializeField] private float maxZRotation = 30f;
+    [SerializeField] private float xRotationScaling = 2f;
+    [SerializeField] private float zRotationScaling = 2f;
+
+    public float NormalizedPitch { get; private set; }
+    public float NormalizedRoll { get; private set; }
 
     private void Start()
     {
         joystickInitialRotation = joystickObject.transform.localRotation;
-
     }
 
     private void Update()
     {
-        // Wenn der Joystick mit dem rechten Controller gepackt wird und sich der Controller im Trigger des Joysticks befindet
         if (joystickGrabbed)
         {
             CalculateJoystickRotation();
         }
         else
         {
-            // Zurücksetzen der unsichtbaren Joystick-Position
             joystickObjectInvisible.transform.position = originJoystickTransform.position;
             joystickObjectInvisible.transform.rotation = originJoystickTransform.rotation;
         }
@@ -46,17 +41,13 @@ public class JoystickConstraintLogic : MonoBehaviour
 
     private void CalculateJoystickRotation()
     {
-        // Berechne die Positionsänderung im lokalen Koordinatensystem des Joysticks
         Vector3 localPositionDelta = originJoystickTransform.InverseTransformDirection(joystickObjectInvisible.transform.position - originJoystickTransform.position);
 
-        // Konvertiere lokale Positionsänderung in Rotation, verstärkt durch Skalierungsvariablen
         float xRotation = localPositionDelta.z * maxXRotation * xRotationScaling;
         float zRotation = -localPositionDelta.x * maxZRotation * zRotationScaling;
 
-        // Berechne den Abstand (Radius) der Rotation von der Mitte
         float rotationMagnitude = Mathf.Sqrt(xRotation * xRotation + zRotation * zRotation);
 
-        // Begrenze die Rotation auf einen maximalen Radius (Kreisbegrenzung)
         if (rotationMagnitude > maxXRotation)
         {
             float scale = maxXRotation / rotationMagnitude;
@@ -64,8 +55,10 @@ public class JoystickConstraintLogic : MonoBehaviour
             zRotation *= scale;
         }
 
-        // Setze Rotation auf das sichtbare Joystick-Objekt
         joystickObject.transform.localRotation = Quaternion.Euler(xRotation, 0f, zRotation);
+
+        NormalizedPitch = xRotation / maxXRotation;
+        NormalizedRoll = zRotation / maxZRotation;
     }
 
     public void GrabButtonPressed()
@@ -95,6 +88,8 @@ public class JoystickConstraintLogic : MonoBehaviour
         }
 
         joystickObject.transform.localRotation = joystickInitialRotation;
+        NormalizedPitch = 0f;
+        NormalizedRoll = 0f;
         returnToCenterRoutine = null;
     }
 }

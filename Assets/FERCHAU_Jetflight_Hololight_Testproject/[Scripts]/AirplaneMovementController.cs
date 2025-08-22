@@ -1,12 +1,16 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.XR.Interaction.Toolkit.Inputs.Haptics;
 
 public class AirplaneMovementController : MonoBehaviour
 {
     [Header("Joystick Input")]
-    [SerializeField] private GameObject joystickInput;
+    [SerializeField] private JoystickConstraintLogic joystickInput;
     [SerializeField] private ThrottleSpeedCalc throttleSpeedScript;
     [SerializeField] private GameObject jetObject;
+
+    [Header("VR Haptic Player")]
+    [SerializeField] private HapticImpulsePlayer rightHapticPlayer;
 
     [Header("Rotating Speeds")]
     [Range(5f, 500f)][SerializeField] private float pitchSpeed = 100f;
@@ -17,7 +21,17 @@ public class AirplaneMovementController : MonoBehaviour
     [Range(0f, 1f)][SerializeField] private float joystickDeadzone = 0.05f;
     [Range(0f, 1f)][SerializeField] private float thumbstickDeadzone = 0.1f;
 
-    // NEU: Auto-Stabilisierungseinstellungen
+    [Header("Input Response Curves")]
+    [SerializeField] private AnimationCurve pitchCurve;
+    [SerializeField] private AnimationCurve rollCurve;
+
+    [Header("Haptics")]
+    [Range(0f, 1f)][SerializeField] private float hapticIntensityMultiplier = 0.5f;
+    [Range(0f, 1f)][SerializeField] private float hapticDuration = 0.1f;
+    [SerializeField] private float minHapticInputThreshold = 0.01f;
+    [Tooltip("Stärke der Vibration nur für die Gier-Achse (Yaw)")]
+    [Range(0f, 1f)][SerializeField] private float yawHapticMultiplier = 0.25f;
+
     [Header("Auto-Stabilization Settings")]
     [Tooltip("Geschwindigkeit, mit der das Flugzeug auf Pitch (X-Achse) und Roll (Z-Achse) stabilisiert wird, wenn der Joystick in der Deadzone ist.")]
     [Range(0.1f, 10f)][SerializeField] private float stabilizationSpeed = 2.0f;
@@ -26,7 +40,7 @@ public class AirplaneMovementController : MonoBehaviour
     [Range(0f, 90f)][SerializeField] private float maxYawStabilizationAngle = 45f;
 
     [Tooltip("Der Winkel-Schwellenwert (in Grad), unter dem die automatische Stabilisierung den Wert als 'erreicht' betrachtet und weitere Korrekturen stoppt.")]
-    [Range(0.001f, 1f)][SerializeField] private float stabilizationAngleThreshold = 0.05f; // NEU: Schwellenwert für Zittern
+    [Range(0.001f, 1f)][SerializeField] private float stabilizationAngleThreshold = 0.05f;
 
     public InputActionReference rightThumbstick;
 
@@ -128,13 +142,13 @@ public class AirplaneMovementController : MonoBehaviour
         }
     }
 
-    void RightThumbstickMoved(InputAction.CallbackContext context)
+    private void RightThumbstickMoved(InputAction.CallbackContext context)
     {
         Vector2 extractedVector = context.ReadValue<Vector2>();
         joystickYaw = extractedVector.x;
     }
 
-    void RightThumbstickReleased(InputAction.CallbackContext context)
+    private void RightThumbstickReleased(InputAction.CallbackContext context)
     {
         joystickYaw = 0f;
     }
@@ -150,6 +164,7 @@ public class AirplaneMovementController : MonoBehaviour
         SmoothSpeed();
         Movement();
         AdjustGlobalGravity();
+        UpdateHaptics();
     }
 
     private void Update()
@@ -160,6 +175,25 @@ public class AirplaneMovementController : MonoBehaviour
         }
 
         UpdateEngineSound();
+    }
+
+    private void UpdateHaptics()
+    {
+        if (rightHapticPlayer == null) return;
+
+        float yawMagnitude = Mathf.Abs(CurrentJoystickYaw) * yawHapticMultiplier;
+
+        float combinedInputMagnitude = new Vector3(CurrentJoystickPitch, CurrentJoystickRoll, yawMagnitude).magnitude;
+
+        if (combinedInputMagnitude > minHapticInputThreshold)
+        {
+            float hapticIntensity = combinedInputMagnitude * hapticIntensityMultiplier;
+            rightHapticPlayer.SendHapticImpulse(hapticIntensity, hapticDuration);
+        }
+        else
+        {
+            rightHapticPlayer.SendHapticImpulse(0, 0);
+        }
     }
 
     private void SmoothSpeed()
@@ -191,18 +225,22 @@ public class AirplaneMovementController : MonoBehaviour
     {
         jetObject.transform.Translate(Vector3.forward * currentSpeed * Time.deltaTime);
 
-        float rawJoystickPitch = joystickInput.transform.localRotation.x;
-        float rawJoystickRoll = joystickInput.transform.localRotation.z;
+        float rawJoystickPitch = joystickInput.NormalizedPitch;
+        float rawJoystickRoll = joystickInput.NormalizedRoll;
 
         CurrentJoystickPitch = Mathf.Abs(rawJoystickPitch) < joystickDeadzone ? 0f : rawJoystickPitch;
         CurrentJoystickRoll = Mathf.Abs(rawJoystickRoll) < joystickDeadzone ? 0f : rawJoystickRoll;
         CurrentJoystickYaw = Mathf.Abs(joystickYaw) < thumbstickDeadzone ? 0f : joystickYaw;
 
-        jetObject.transform.Rotate(Vector3.forward * CurrentJoystickRoll * rollSpeed * Time.deltaTime);
-        jetObject.transform.Rotate(Vector3.right * CurrentJoystickPitch * pitchSpeed * Time.deltaTime);
-        jetObject.transform.Rotate(Vector3.up * CurrentJoystickYaw * yawSpeed * Time.deltaTime);
+        float curvedPitch = pitchCurve.Evaluate(Mathf.Abs(CurrentJoystickPitch)) * Mathf.Sign(CurrentJoystickPitch);
+        float curvedRoll = rollCurve.Evaluate(Mathf.Abs(CurrentJoystickRoll)) * Mathf.Sign(CurrentJoystickRoll);
+        float curvedYaw = CurrentJoystickYaw;
 
-        if (!controllerIsHeld && CurrentJoystickPitch == 0f && CurrentJoystickRoll == 0f && CurrentJoystickYaw == 0f) // NEU: Stabilisiere auch Yaw, wenn Deadzone
+        jetObject.transform.Rotate(Vector3.forward * curvedRoll * rollSpeed * Time.deltaTime);
+        jetObject.transform.Rotate(Vector3.right * curvedPitch * pitchSpeed * Time.deltaTime);
+        jetObject.transform.Rotate(Vector3.up * curvedYaw * yawSpeed * Time.deltaTime);
+
+        if (!controllerIsHeld && CurrentJoystickPitch == 0f && CurrentJoystickRoll == 0f && CurrentJoystickYaw == 0f)
         {
             AutoStabilize();
         }
@@ -214,38 +252,34 @@ public class AirplaneMovementController : MonoBehaviour
 
         float normalizedPitch = NormalizeAngle(currentEuler.x);
         float normalizedRoll = NormalizeAngle(currentEuler.z);
-        float normalizedYaw = NormalizeAngle(currentEuler.y); // Neu für Yaw-Stabilisierung
+        float normalizedYaw = NormalizeAngle(currentEuler.y);
 
-        // Stabilisiere Pitch (X-Achse)
-        if (Mathf.Abs(normalizedPitch) > stabilizationAngleThreshold) // NEU: Schwellenwert prüfen
+        if (Mathf.Abs(normalizedPitch) > stabilizationAngleThreshold)
         {
             float pitchCorrection = -normalizedPitch * stabilizationSpeed * Time.deltaTime;
             jetObject.transform.Rotate(Vector3.right, pitchCorrection, Space.Self);
         }
-        else if (Mathf.Abs(normalizedPitch) <= stabilizationAngleThreshold && normalizedPitch != 0f) // NEU: Setze exakt auf 0, wenn im Schwellenbereich
+        else if (Mathf.Abs(normalizedPitch) <= stabilizationAngleThreshold && normalizedPitch != 0f)
         {
             jetObject.transform.localRotation = Quaternion.Euler(0, jetObject.transform.localEulerAngles.y, jetObject.transform.localEulerAngles.z);
         }
 
-
-        // Stabilisiere Roll (Z-Achse)
-        if (Mathf.Abs(normalizedRoll) > stabilizationAngleThreshold) // NEU: Schwellenwert prüfen
+        if (Mathf.Abs(normalizedRoll) > stabilizationAngleThreshold)
         {
             float rollCorrection = -normalizedRoll * stabilizationSpeed * Time.deltaTime;
             jetObject.transform.Rotate(Vector3.forward, rollCorrection, Space.Self);
         }
-        else if (Mathf.Abs(normalizedRoll) <= stabilizationAngleThreshold && normalizedRoll != 0f) // NEU: Setze exakt auf 0
+        else if (Mathf.Abs(normalizedRoll) <= stabilizationAngleThreshold && normalizedRoll != 0f)
         {
             jetObject.transform.localRotation = Quaternion.Euler(jetObject.transform.localEulerAngles.x, jetObject.transform.localEulerAngles.y, 0);
         }
 
-        // Stabilisierung der Gierachse
-        if (Mathf.Abs(normalizedYaw) > stabilizationAngleThreshold && Mathf.Abs(normalizedYaw) <= maxYawStabilizationAngle) // NEU: Auch hier Schwellenwert prüfen
+        if (Mathf.Abs(normalizedYaw) > stabilizationAngleThreshold && Mathf.Abs(normalizedYaw) <= maxYawStabilizationAngle)
         {
             float yawCorrection = -normalizedYaw * stabilizationSpeed * Time.deltaTime * 0.5f;
             jetObject.transform.Rotate(Vector3.up, yawCorrection, Space.Self);
         }
-        else if (Mathf.Abs(normalizedYaw) <= stabilizationAngleThreshold && normalizedYaw != 0f && CurrentJoystickYaw == 0f) // NEU: Setze exakt auf 0, wenn im Schwellenbereich und kein Yaw-Input
+        else if (Mathf.Abs(normalizedYaw) <= stabilizationAngleThreshold && normalizedYaw != 0f && CurrentJoystickYaw == 0f)
         {
             jetObject.transform.localRotation = Quaternion.Euler(jetObject.transform.localEulerAngles.x, 0, jetObject.transform.localEulerAngles.z);
         }
@@ -260,9 +294,9 @@ public class AirplaneMovementController : MonoBehaviour
 
     private void AdjustGlobalGravity()
     {
-        if(ejectionSeatLogicScript.ejectionSequenceStarted)
+        if (ejectionSeatLogicScript.ejectionSequenceStarted)
         {
-            Physics.gravity = initialGlobalGravity; 
+            Physics.gravity = initialGlobalGravity;
             return;
         }
         if (!groundContactManagerScript.isGrounded)
