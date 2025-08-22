@@ -3599,9 +3599,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 175719312}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.29514652, z: 0, w: 0.955452}
+  m_LocalRotation: {x: 0, y: -0.8901449, z: 0, w: 0.45567775}
   m_LocalPosition: {x: -1582.6641, y: 0, z: -1942.9585}
-  m_LocalScale: {x: 0.77196777, y: 0.77196777, z: 0.77196777}
+  m_LocalScale: {x: 0.8408779, y: 0.8408779, z: 0.8408779}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1997444839}
@@ -3736,8 +3736,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: 56.711426, y: -108.59733, z: -3240.1357}
-    m_Extent: {x: 4229.431, y: 108.59733, z: 4229.4297}
+    m_Center: {x: -3317.4756, y: -108.62224, z: -2269.5059}
+    m_Extent: {x: 4230.403, y: 108.62224, z: 4230.401}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -4427,8 +4427,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: 56.711395, y: -184.91283, z: -3240.1357}
-    m_Extent: {x: 4229.431, y: 32.281826, z: 4229.4297}
+    m_Center: {x: -3317.4756, y: -184.95525, z: -2269.5059}
+    m_Extent: {x: 4230.403, y: 32.28923, z: 4230.401}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -4800,8 +4800,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -196.9186, y: -184.91283, z: -3159.1113}
-    m_Extent: {x: 3837.2852, y: 12.006388, z: 3837.2917}
+    m_Center: {x: -3151.8555, y: -184.95525, z: -2060.9497}
+    m_Extent: {x: 3838.1665, y: 12.009143, z: 3838.1733}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -11443,7 +11443,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2312279406281013499, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: maxSpeedValue
-      value: 200
+      value: 250
       objectReference: {fileID: 0}
     - target: {fileID: 2312279406281013499, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: thrusterFlame1
@@ -11795,11 +11795,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5612333479144322743, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: turnRate
-      value: 20
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 5612333479144322743, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: missileSpeed
-      value: 400
+      value: 550
       objectReference: {fileID: 0}
     - target: {fileID: 5612333479144322743, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: targetingSystem
@@ -11829,6 +11829,10 @@ PrefabInstance:
       propertyPath: straightFlightDuration
       value: 0.2
       objectReference: {fileID: 0}
+    - target: {fileID: 5612333479144322743, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
+      propertyPath: ejectionSeatLogicScript
+      value: 
+      objectReference: {fileID: 704668198}
     - target: {fileID: 5612333479144322743, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: flightTimeTillExplosion
       value: 6
@@ -12398,6 +12402,7 @@ MonoBehaviour:
   vignetteColor: {r: 0, g: 0, b: 0, a: 1}
   vignetteColorBlend: {r: 0, g: 0, b: 0, a: 1}
   apertureVerticalPosition: -0.1
+  groundContactManagerScript: {fileID: 704668191}
 --- !u!114 &704668191
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19256,7 +19261,7 @@ MonoBehaviour:
     deleteQuestion: 0
   - s: "Moton Sickness Vignette \xFCber Joystick nur machen wenn man fliegt, nicht
       schon beim stehen"
-    state: 0
+    state: 3
     show: 1
     deleteQuestion: 0
   - s: Flugverhalten anpassen, quadratische skalierung
@@ -19264,6 +19269,18 @@ MonoBehaviour:
     show: 1
     deleteQuestion: 0
   - s: Raketen Deaktivieren wenn man Schleudersitz aktiviert hat
+    state: 3
+    show: 1
+    deleteQuestion: 0
+  - s: "Nur Fadenkreuz gr\xFCn locken wenn Raketen das Ziel wirklich erreichen w\xFCrden"
+    state: 0
+    show: 1
+    deleteQuestion: 0
+  - s: Vibration Controller je mehr Ausschlag
+    state: 0
+    show: 1
+    deleteQuestion: 0
+  - s: "Weicherer und sp\xE4terer Start der Vignette"
     state: 0
     show: 1
     deleteQuestion: 0
@@ -22160,8 +22177,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: 56.711426, y: -108.59733, z: -3240.1357}
-    m_Extent: {x: 4229.431, y: 108.59733, z: 4229.4297}
+    m_Center: {x: -3317.4756, y: -108.62224, z: -2269.5059}
+    m_Extent: {x: 4230.403, y: 108.62224, z: 4230.401}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -25310,8 +25327,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: 56.711426, y: -184.91283, z: -3240.1357}
-    m_Extent: {x: 4229.431, y: 32.28183, z: 4229.4297}
+    m_Center: {x: -3317.4756, y: -184.95525, z: -2269.5059}
+    m_Extent: {x: 4230.403, y: 32.28923, z: 4230.401}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0

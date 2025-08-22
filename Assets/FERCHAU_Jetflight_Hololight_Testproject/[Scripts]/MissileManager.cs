@@ -25,6 +25,7 @@ public class MissileManager : MonoBehaviour
     [Header("Targeting System")]
     [SerializeField] private TargetingSystem targetingSystem;
 
+
     #endregion
 
     #region Private Variables
@@ -32,6 +33,7 @@ public class MissileManager : MonoBehaviour
     private bool rightTriggerPressed = false;
     private bool preventContiniousFiring = false;
     public InputActionReference triggerPressedButton;
+    [SerializeField] private EjectionSeatLogic ejectionSeatLogicScript;
 
     private const string DEFAULT_TAG = "Untagged";
     private const string MISSILE_TAG = "Missile";
@@ -67,7 +69,7 @@ public class MissileManager : MonoBehaviour
 
     private void Update()
     {
-        if (rightTriggerPressed && !preventContiniousFiring)
+        if (rightTriggerPressed && !preventContiniousFiring && !ejectionSeatLogicScript.ejectionSequenceStarted)
         {
             preventContiniousFiring = true;
             FireMissile();

@@ -36,6 +36,7 @@ public class MotionSicknessVignetteLogic : MonoBehaviour, ITunnelingVignetteProv
     [SerializeField] private Color vignetteColor = Color.black;
     [SerializeField] private Color vignetteColorBlend = Color.black;
     [Range(-0.2f, 0.2f)][SerializeField] private float apertureVerticalPosition = 0f;
+    [SerializeField] private GroundContactManager groundContactManagerScript;
 
     // Referenz auf den TunnelingVignetteController in der Szene
     private TunnelingVignetteController m_TunnelingVignetteController;
@@ -89,7 +90,19 @@ public class MotionSicknessVignetteLogic : MonoBehaviour, ITunnelingVignetteProv
     {
         if (m_isExternallyControlled)
         {
-            return; // Skip motion-based logic if externally controlled
+            return;
+        }
+
+        // NEUE PRÜFUNG: Führe die Vignette-Logik für die Bewegung nur aus, wenn das Flugzeug nicht am Boden ist.
+        if (groundContactManagerScript.isGrounded)
+        {
+            // Vignette beenden, falls sie durch eine Bewegung aktiviert wurde.
+            if (m_isVignetteRequestedActive)
+            {
+                m_TunnelingVignetteController.EndTunnelingVignette(this);
+                m_isVignetteRequestedActive = false;
+            }
+            return;
         }
 
         // Hole die Inputs vom AirplaneMovementController
@@ -118,7 +131,7 @@ public class MotionSicknessVignetteLogic : MonoBehaviour, ITunnelingVignetteProv
         // Normalisiere die höchste gewichtete Stärke relativ zum combinedRotationStrengthThreshold
         // um einen Wert zwischen 0 und 1 zu erhalten, der die Intensität der Vignette steuert.
         float vignetteIntensityFactor = 0f;
-        if (combinedRotationStrengthThreshold > 0.001f) // Vermeide Division durch Null
+        if (combinedRotationStrengthThreshold > 0.001f)
         {
             vignetteIntensityFactor = Mathf.Clamp01(highestWeightedStrength / combinedRotationStrengthThreshold);
         }
@@ -152,7 +165,6 @@ public class MotionSicknessVignetteLogic : MonoBehaviour, ITunnelingVignetteProv
             }
         }
     }
-
     private void OnDisable()
     {
         // Beim Deaktivieren des Skripts oder des GameObjects sicherstellen,
