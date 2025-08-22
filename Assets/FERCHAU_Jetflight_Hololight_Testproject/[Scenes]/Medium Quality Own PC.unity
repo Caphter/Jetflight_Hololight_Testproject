@@ -659,7 +659,7 @@ MonoBehaviour:
   missileNumber: 3
   hitmarkerGameObject: {fileID: 1050087424}
   hitmarkerDuration: 1
-  targetingSystemScript: {fileID: 0}
+  targetingSystemScript: {fileID: 704668199}
 --- !u!65 &3134574
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2212,7 +2212,7 @@ MonoBehaviour:
   missileNumber: 2
   hitmarkerGameObject: {fileID: 1050087424}
   hitmarkerDuration: 1
-  targetingSystemScript: {fileID: 0}
+  targetingSystemScript: {fileID: 704668199}
 --- !u!65 &63339147
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3599,9 +3599,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 175719312}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.8170253, z: 0, w: -0.57660186}
+  m_LocalRotation: {x: 0, y: -0.4346382, z: 0, w: -0.9006052}
   m_LocalPosition: {x: -1582.6641, y: 0, z: -1942.9585}
-  m_LocalScale: {x: 1.1515775, y: 1.1515775, z: 1.1515775}
+  m_LocalScale: {x: 0.955628, y: 0.955628, z: 0.955628}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1997444839}
@@ -3736,8 +3736,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -188.34033, y: -108.858154, z: 240.12036}
-    m_Extent: {x: 4239.59, y: 108.858154, z: 4239.588}
+    m_Center: {x: -709.8882, y: -108.599976, z: 461.84253}
+    m_Extent: {x: 4229.536, y: 108.599976, z: 4229.5347}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -4427,8 +4427,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -188.34035, y: -185.35695, z: 240.12029}
-    m_Extent: {x: 4239.59, y: 32.35936, z: 4239.588}
+    m_Center: {x: -709.8882, y: -184.91734, z: 461.84244}
+    m_Extent: {x: 4229.536, y: 32.282616, z: 4229.5347}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -4800,8 +4800,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -179.9351, y: -185.35695, z: -26.644575}
-    m_Extent: {x: 3846.5015, y: 12.035225, z: 3846.508}
+    m_Center: {x: -631.8104, y: -184.91734, z: 207.2829}
+    m_Extent: {x: 3837.38, y: 12.006681, z: 3837.387}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -10826,7 +10826,7 @@ MonoBehaviour:
   missileNumber: 0
   hitmarkerGameObject: {fileID: 1050087424}
   hitmarkerDuration: 1
-  targetingSystemScript: {fileID: 0}
+  targetingSystemScript: {fileID: 704668199}
 --- !u!65 &690847906
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -11734,11 +11734,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3886622180165394029, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: pitchCurve.m_Curve.Array.data[1].time
-      value: 0.5934864
+      value: 0.58263165
       objectReference: {fileID: 0}
     - target: {fileID: 3886622180165394029, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: pitchCurve.m_Curve.Array.data[2].time
-      value: 1
+      value: 1.0108643
       objectReference: {fileID: 0}
     - target: {fileID: 3886622180165394029, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: pitchCurve.m_Curve.Array.data[3].time
@@ -11758,11 +11758,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3886622180165394029, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: pitchCurve.m_Curve.Array.data[1].value
-      value: 0.16559711
+      value: 0.17030929
       objectReference: {fileID: 0}
     - target: {fileID: 3886622180165394029, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: pitchCurve.m_Curve.Array.data[2].value
-      value: 1
+      value: 0.8796959
       objectReference: {fileID: 0}
     - target: {fileID: 3886622180165394029, guid: 8057da0cef6dd8a4faddde1deccf6f05, type: 3}
       propertyPath: pitchCurve.m_Curve.Array.data[3].value
@@ -12538,8 +12538,8 @@ MonoBehaviour:
   airplaneMovementController: {fileID: 704668197}
   minApertureSize: 0.6
   combinedRotationStrengthThreshold: 0.53
-  vignetteEaseInTime: 0.7
-  vignetteEaseOutTime: 1
+  vignetteEaseInTime: 1.5
+  vignetteEaseOutTime: 1.5
   minInputThresholdForVignette: 0.023
   featheringEffect: 0.4
   vignetteColor: {r: 0, g: 0, b: 0, a: 1}
@@ -19378,16 +19378,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   title: TODO
   textList:
+  - s: Spacial Audio auf Raketen und Flugzeugexplosion
+    state: 0
+    show: 1
+    deleteQuestion: 0
+  - s: "Nur Fadenkreuz gr\xFCn locken wenn Raketen das Ziel wirklich erreichen w\xFCrden"
+    state: 0
+    show: 1
+    deleteQuestion: 0
+  - s: UI
+    state: 0
+    show: 1
+    deleteQuestion: 0
+  - s: "Weicherer und sp\xE4terer Start der Vignette"
+    state: 3
+    show: 1
+    deleteQuestion: 0
+  - s: Null Reference bei Target Destroy
+    state: 3
+    show: 1
+    deleteQuestion: 0
   - s: Licht/Schatten anpassen --> Flimmern reduzieren
     state: 3
     show: 1
     deleteQuestion: 0
   - s: Instrumente sehen nicht gut aus + Flimmern
     state: 3
-    show: 1
-    deleteQuestion: 0
-  - s: Spacial Audio auf Raketen und Flugzeugexplosion
-    state: 0
     show: 1
     deleteQuestion: 0
   - s: Explosion nicht an richtiger Stelle
@@ -19415,24 +19431,8 @@ MonoBehaviour:
     state: 3
     show: 1
     deleteQuestion: 0
-  - s: "Nur Fadenkreuz gr\xFCn locken wenn Raketen das Ziel wirklich erreichen w\xFCrden"
-    state: 0
-    show: 1
-    deleteQuestion: 0
   - s: Vibration Controller je mehr Ausschlag
-    state: 0
-    show: 1
-    deleteQuestion: 0
-  - s: "Weicherer und sp\xE4terer Start der Vignette"
-    state: 0
-    show: 1
-    deleteQuestion: 0
-  - s: UI
-    state: 0
-    show: 1
-    deleteQuestion: 0
-  - s: Null Reference bei Target Destroy
-    state: 0
+    state: 3
     show: 1
     deleteQuestion: 0
 --- !u!4 &1181289239
@@ -22328,8 +22328,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -188.34033, y: -108.858154, z: 240.12036}
-    m_Extent: {x: 4239.59, y: 108.858154, z: 4239.588}
+    m_Center: {x: -709.8882, y: -108.599976, z: 461.84253}
+    m_Extent: {x: 4229.536, y: 108.599976, z: 4229.5347}
   lockTransform: 0
   lockPosParent: 1
   lockPosChildren: 0
@@ -25478,8 +25478,8 @@ MonoBehaviour:
     scale: {x: 0, y: 0, z: 0}
     positionYOld: 0
   bounds:
-    m_Center: {x: -188.34033, y: -185.35695, z: 240.12036}
-    m_Extent: {x: 4239.59, y: 32.35936, z: 4239.588}
+    m_Center: {x: -709.8882, y: -184.91734, z: 461.84253}
+    m_Extent: {x: 4229.536, y: 32.282608, z: 4229.5347}
   lockTransform: 0
   lockPosParent: 0
   lockPosChildren: 0
@@ -29887,7 +29887,7 @@ MonoBehaviour:
   missileNumber: 1
   hitmarkerGameObject: {fileID: 1050087424}
   hitmarkerDuration: 1
-  targetingSystemScript: {fileID: 0}
+  targetingSystemScript: {fileID: 704668199}
 --- !u!65 &1818035716
 BoxCollider:
   m_ObjectHideFlags: 0
